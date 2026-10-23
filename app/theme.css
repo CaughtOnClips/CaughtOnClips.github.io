@@ -1,0 +1,74 @@
+/* =====================================================================
+   HARDGRAIN · APP THEME BRIDGE  (swappable)
+   Load order: hardgrain-theme.css (designer's drop-in, --hg-* tokens and
+   component classes) → theme.css (this file) → app.css (layout only).
+   This file maps the designer's tokens onto the variables app.css uses.
+   The fallbacks after each comma are the same navy / electric-blue values,
+   so the app still looks right if hardgrain-theme.css is missing.
+   To re-skin: replace hardgrain-theme.css with the designer's new version.
+   ===================================================================== */
+:root{
+  /* Backgrounds */
+  --color-bg:var(--hg-void,#060A13);
+  --color-bg-2:var(--hg-navy,#0B1424);
+  --color-surface:var(--hg-panel,#101D33);
+  --color-surface-2:rgba(58,184,255,.14);
+  --color-window:var(--hg-panel-glass,rgba(16,29,51,.82));
+  --color-overlay:rgba(3,6,12,.86);
+  --color-line:var(--hg-panel-line,rgba(58,184,255,.18));
+
+  /* Glow + accents */
+  --color-glow:var(--hg-blue,#3AB8FF);          /* system blue: borders, titles, XP */
+  --color-glow-deep:var(--hg-blue-deep,#1E6FD9);
+  --color-primary:var(--hg-ember,#FF6B3D);      /* primary CTA fill (dark text) */
+  --color-on-primary:var(--hg-text-on-accent,#060A13);
+  --color-primary-2:var(--hg-blue,#3AB8FF);     /* links, active tab, highlights */
+  --color-accent:var(--hg-gold,#FFC94A);        /* level number, stat points, rewards */
+
+  /* Text */
+  --color-text:var(--hg-text,#E8F4FF);
+  --color-text-muted:var(--hg-text-muted,#8FA6C4);
+  --color-heading:var(--hg-text,#E8F4FF);
+
+  /* Status */
+  --color-success:var(--hg-success,#3DDC97);
+  --color-warning:var(--hg-gold,#FFC94A);
+  --color-danger:var(--hg-danger,#FF4D6A);
+  --color-locked:#5B6C8C;
+
+  /* Stat colors (app-specific; designer may add their own) */
+  --stat-str:var(--hg-ember,#FF6B3D); --stat-end:var(--hg-gold,#FFC94A); --stat-vit:#FF7EA8; --stat-agi:var(--hg-success,#3DDC97); --stat-dis:#9B8CFF;
+
+  /* Borders + glow */
+  --border-color:rgba(58,184,255,.55);
+  --border-strong:var(--hg-blue,#3AB8FF);
+  --border-width:var(--hg-border-w,1.5px);
+  --radius-window:var(--hg-radius-window,6px);
+  --radius-control:var(--hg-radius-ctrl,4px);
+  --glow-color:var(--hg-blue-soft,rgba(58,184,255,.35));
+  --glow:var(--hg-glow-md,0 0 0 1px rgba(58,184,255,.55),0 0 18px rgba(58,184,255,.35));
+  --glow-strong:var(--hg-glow-lg,0 0 0 1px rgba(58,184,255,.7),0 0 40px rgba(58,184,255,.45));
+  --text-glow:var(--hg-text-glow,0 0 10px rgba(58,184,255,.55));
+  --scanline-opacity:.025;
+  --grid-opacity:.05;
+
+  /* Fonts (designer file defines --font-display / --font-ui / --font-mono; these are fallbacks) */
+  --font-display-fb:"Chakra Petch","Oxanium",system-ui,sans-serif;
+  --font-ui-fb:"Inter",-apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;
+  --heading-transform:uppercase;
+  --heading-tracking:var(--hg-title-tracking,.14em);
+
+  /* Animation timing */
+  --anim-fast:var(--hg-dur-fast,120ms);
+  --anim-med:var(--hg-dur-base,220ms);
+  --anim-slow:var(--hg-dur-xp,900ms);
+  --levelup-duration:var(--hg-dur-pop,520ms);
+  --glow-pulse:var(--hg-dur-pulse,2400ms);
+}
+/* Alternate: original Hardgrain brand palette, activate with <html data-theme="ember"> */
+:root[data-theme="ember"]{
+  --color-bg:#15130F; --color-bg-2:#1C1914; --color-surface:#24201B; --color-window:rgba(36,32,27,.85);
+  --color-primary:#E4572E; --color-on-primary:#15130F; --color-primary-2:#D4F24A; --color-accent:#D4F24A;
+  --color-text:#F3EFE6; --color-text-muted:#A39B8E; --color-heading:#F3EFE6; --border-color:rgba(228,87,46,.5); --border-strong:#E4572E;
+  --hg-blue:#E4572E; --hg-blue-soft:rgba(228,87,46,.4); --hg-border:1.5px solid rgba(228,87,46,.7);
+}

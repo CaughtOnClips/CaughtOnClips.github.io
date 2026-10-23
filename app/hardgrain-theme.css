@@ -1,0 +1,206 @@
+/* ==========================================================================
+   Hardgrain theme v2: "Level-Up HUD"
+   An original game-HUD design system. It is inspired by the RPG / "system interface"
+   genre and is NOT a replica of any anime, manhwa or game UI.
+   Drop-in file: every value is a CSS custom property on :root.
+
+   FONTS (all SIL Open Font License, via Google Fonts):
+     Web: keep the @import below, or put this in <head>:
+       <link rel="preconnect" href="https://fonts.googleapis.com">
+       <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+       <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Inter:wght@400..800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+     Native iOS: bundle the .ttf files (OFL allows this). SF Pro is fine for body text,
+     and the --font-ui stack falls back to it.
+   ========================================================================== */
+@import url("https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Inter:wght@400..800&family=JetBrains+Mono:wght@500;700&display=swap");
+
+:root {
+  /* ---------- Color: surfaces ---------- */
+  --hg-void:        #060A13;  /* app background, deepest layer */
+  --hg-navy:        #0B1424;  /* section background, gradient end */
+  --hg-panel:       #101D33;  /* system-window fill (opaque fallback) */
+  --hg-panel-glass: rgba(16, 29, 51, 0.82); /* system-window fill over content/video */
+  --hg-panel-line:  rgba(58, 184, 255, 0.18); /* dividers inside windows */
+
+  /* ---------- Color: system glow (primary) ---------- */
+  --hg-blue:        #3AB8FF;  /* SYSTEM BLUE: borders, titles, XP fill, focus. 8.94:1 on void */
+  --hg-blue-deep:   #1E6FD9;  /* filled buttons with white text (4.85:1), XP bar gradient start */
+  --hg-blue-soft:   rgba(58, 184, 255, 0.35); /* glow color */
+  --hg-blue-faint:  rgba(58, 184, 255, 0.10); /* hover/selected row tint */
+
+  /* ---------- Color: text ---------- */
+  --hg-text:        #E8F4FF;  /* ICE: primary text. 17.74:1 on void, 15.11:1 on panel */
+  --hg-text-muted:  #8FA6C4;  /* MIST: secondary text. 7.94:1 on void, 6.76:1 on panel */
+  --hg-text-on-blue:#04101F;  /* text on --hg-blue fills (8.63:1) */
+  --hg-text-on-accent:#060A13;/* text on ember/gold fills (7.00 / 12.92:1) */
+
+  /* ---------- Color: accents ---------- */
+  --hg-ember:       #FF6B3D;  /* brand accent (the H mark), level-up, primary CTA fill with dark text. 7.00:1 on void */
+  --hg-gold:        #FFC94A;  /* rewards, stat points available, A/S ranks. 12.92:1 on void */
+  --hg-success:     #3DDC97;  /* quest complete. 9.54:1 on panel */
+  --hg-danger:      #FF4D6A;  /* missed / warning. 5.24:1 on panel */
+  /* NEVER: white text on ember (2.83:1, fails). Use --hg-text-on-accent. */
+
+  /* ---------- Rank colors (generic E→S letter tiers) ---------- */
+  --hg-rank-e: #8FA6C4;  /* Spark    */
+  --hg-rank-d: #3DDC97;  /* Iron     */
+  --hg-rank-c: #3AB8FF;  /* Steel    */
+  --hg-rank-b: #9B8CFF;  /* Forged   */
+  --hg-rank-a: #FFC94A;  /* Tempered */
+  --hg-rank-s: #FF6B3D;  /* Legend   */
+
+  /* ---------- Glow / shadow ---------- */
+  --hg-glow-sm:   0 0 6px rgba(58,184,255,.45);
+  --hg-glow-md:   0 0 0 1px rgba(58,184,255,.55), 0 0 18px rgba(58,184,255,.35), inset 0 0 18px rgba(58,184,255,.10);
+  --hg-glow-lg:   0 0 0 1px rgba(58,184,255,.7), 0 0 40px rgba(58,184,255,.45), 0 0 90px rgba(30,111,217,.30), inset 0 0 30px rgba(58,184,255,.14);
+  --hg-glow-gold: 0 0 0 1px rgba(255,201,74,.7), 0 0 28px rgba(255,201,74,.40);
+  --hg-glow-ember:0 0 0 1px rgba(255,107,61,.7), 0 0 28px rgba(255,107,61,.40);
+  --hg-text-glow: 0 0 10px rgba(58,184,255,.55);
+  --hg-shadow-drop: 0 18px 50px rgba(0,0,0,.55);
+
+  /* ---------- Borders / radius / brackets ---------- */
+  --hg-border-w:      1.5px;
+  --hg-border:        var(--hg-border-w) solid rgba(58,184,255,.75);
+  --hg-radius-window: 6px;    /* windows are near-square: HUD feel, not bubbly */
+  --hg-radius-ctrl:   4px;    /* buttons, chips, inputs */
+  --hg-radius-pill:   999px;  /* XP bar track */
+  --hg-bracket-len:   18px;   /* corner-bracket arm length */
+  --hg-bracket-w:     3px;    /* corner-bracket stroke */
+  --hg-bracket-color: var(--hg-blue);
+  --hg-bracket-inset: -5px;   /* brackets sit just outside the border */
+  --hg-scanline: repeating-linear-gradient(0deg, rgba(58,184,255,.045) 0 1px, transparent 1px 3px);
+
+  /* ---------- Type ---------- */
+  --font-display: "Chakra Petch", "Oxanium", system-ui, sans-serif;     /* titles, ranks, LEVEL numbers */
+  --font-ui:      "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif; /* body */
+  --font-mono:    "JetBrains Mono", ui-monospace, "SF Mono", monospace; /* counters, timers, stats */
+  --hg-title-tracking: 0.14em; /* window titles: uppercase + wide tracking */
+  --fs-xs: 12px; --fs-sm: 14px; --fs-md: 16px; --fs-lg: 20px; --fs-xl: 28px; --fs-2xl: 40px; --fs-hero: 64px;
+
+  /* ---------- Spacing (4-pt grid) ---------- */
+  --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px; --sp-5: 24px; --sp-6: 32px; --sp-7: 48px; --sp-8: 64px;
+  --hg-tap-min: 44px; /* Apple HIG minimum hit target (above the WCAG 24px floor) */
+
+  /* ---------- Motion ---------- */
+  --hg-ease-out:  cubic-bezier(.16, 1, .3, 1);
+  --hg-ease-pop:  cubic-bezier(.34, 1.56, .64, 1);  /* slight overshoot */
+  --hg-dur-fast:  120ms;  /* taps, toggles */
+  --hg-dur-base:  220ms;  /* window open/close */
+  --hg-dur-pop:   520ms;  /* level-up popup entrance */
+  --hg-dur-xp:    900ms;  /* XP bar fill */
+  --hg-dur-pulse: 2400ms; /* idle glow pulse loop */
+}
+
+/* ========================== Components ========================== */
+
+/* System window: the core HUD panel */
+.system-window, .levelup-popup {
+  position: relative;
+  background: var(--hg-scanline), linear-gradient(180deg, rgba(58,184,255,.08), transparent 40%), var(--hg-panel-glass);
+  border: var(--hg-border);
+  border-radius: var(--hg-radius-window);
+  box-shadow: var(--hg-glow-md), var(--hg-shadow-drop);
+  color: var(--hg-text);
+  font-family: var(--font-ui);
+  padding: var(--sp-5);
+  -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+}
+/* Corner brackets: four L-shaped corners drawn with gradients, so no extra markup is needed */
+.system-window::before, .levelup-popup::before {
+  content: ""; position: absolute; inset: var(--hg-bracket-inset); pointer-events: none;
+  --c: var(--hg-bracket-color); --l: var(--hg-bracket-len); --w: var(--hg-bracket-w);
+  background:
+    linear-gradient(var(--c),var(--c)) top left    / var(--l) var(--w) no-repeat,
+    linear-gradient(var(--c),var(--c)) top left    / var(--w) var(--l) no-repeat,
+    linear-gradient(var(--c),var(--c)) top right   / var(--l) var(--w) no-repeat,
+    linear-gradient(var(--c),var(--c)) top right   / var(--w) var(--l) no-repeat,
+    linear-gradient(var(--c),var(--c)) bottom left / var(--l) var(--w) no-repeat,
+    linear-gradient(var(--c),var(--c)) bottom left / var(--w) var(--l) no-repeat,
+    linear-gradient(var(--c),var(--c)) bottom right/ var(--l) var(--w) no-repeat,
+    linear-gradient(var(--c),var(--c)) bottom right/ var(--w) var(--l) no-repeat;
+  filter: drop-shadow(0 0 4px var(--hg-blue-soft));
+}
+.system-window__title {
+  display: flex; align-items: center; gap: var(--sp-2); justify-content: center;
+  font: 700 var(--fs-lg)/1.1 var(--font-display);
+  letter-spacing: var(--hg-title-tracking); text-transform: uppercase;
+  color: var(--hg-text); text-shadow: var(--hg-text-glow);
+  padding-bottom: var(--sp-3); margin: 0 0 var(--sp-4);
+  border-bottom: 1px solid var(--hg-panel-line);
+}
+/* Small hexagon "!" / info glyph before titles (original glyph) */
+.system-window__title::before {
+  content: "◆"; color: var(--hg-blue); font-size: .8em; text-shadow: var(--hg-text-glow);
+}
+
+/* Level-up popup */
+.levelup-popup {
+  /* shares all .system-window styles (border, glass, brackets) */
+  text-align: center; box-shadow: var(--hg-glow-lg), var(--hg-shadow-drop);
+  animation: hg-pop var(--hg-dur-pop) var(--hg-ease-pop) both, hg-pulse var(--hg-dur-pulse) ease-in-out var(--hg-dur-pop) infinite;
+}
+.levelup-popup__level { font: 700 var(--fs-hero)/1 var(--font-display); color: var(--hg-gold); text-shadow: 0 0 18px rgba(255,201,74,.55); }
+.levelup-popup__label { font: 700 var(--fs-xl)/1.1 var(--font-display); letter-spacing: var(--hg-title-tracking); color: var(--hg-blue); text-shadow: var(--hg-text-glow); text-transform: uppercase; }
+
+/* Stat row: label · value · [+] allocate button */
+.stat-row {
+  display: grid; grid-template-columns: 1fr auto var(--hg-tap-min); align-items: center; gap: var(--sp-3);
+  min-height: var(--hg-tap-min); padding: var(--sp-2) 0; border-bottom: 1px solid var(--hg-panel-line);
+  font-family: var(--font-ui);
+}
+.stat-row__label { font: 600 var(--fs-md) var(--font-display); letter-spacing: .08em; text-transform: uppercase; color: var(--hg-text); }
+.stat-row__value { font: 700 var(--fs-lg) var(--font-mono); color: var(--hg-text); font-variant-numeric: tabular-nums; }
+.stat-row__plus {
+  width: var(--hg-tap-min); height: var(--hg-tap-min); border-radius: var(--hg-radius-ctrl);
+  border: var(--hg-border); background: var(--hg-blue-faint); color: var(--hg-blue);
+  font: 700 var(--fs-lg) var(--font-mono); box-shadow: var(--hg-glow-sm); cursor: pointer;
+  transition: transform var(--hg-dur-fast) var(--hg-ease-out), background var(--hg-dur-fast);
+}
+.stat-row__plus:active { transform: scale(.94); background: var(--hg-blue); color: var(--hg-text-on-blue); }
+.stat-row__plus:disabled { opacity: .35; box-shadow: none; }
+
+/* XP bar */
+.xp-bar { position: relative; height: 10px; border-radius: var(--hg-radius-pill); background: rgba(58,184,255,.12); border: 1px solid rgba(58,184,255,.35); overflow: hidden; }
+.xp-bar__fill {
+  height: 100%; width: var(--xp, 0%); border-radius: inherit;
+  background: linear-gradient(90deg, var(--hg-blue-deep), var(--hg-blue));
+  box-shadow: 0 0 12px rgba(58,184,255,.8); transition: width var(--hg-dur-xp) var(--hg-ease-out);
+}
+
+/* Rank badge: hexagon, colored per tier via [data-rank] */
+.rank-badge {
+  --rc: var(--hg-rank-e);
+  display: inline-grid; place-items: center; width: 52px; height: 58px;
+  clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
+  background: linear-gradient(160deg, color-mix(in srgb, var(--rc) 35%, var(--hg-panel)), var(--hg-panel));
+  color: var(--rc); font: 700 var(--fs-xl)/1 var(--font-display);
+  filter: drop-shadow(0 0 8px color-mix(in srgb, var(--rc) 60%, transparent));
+}
+.rank-badge[data-rank="D"]{--rc:var(--hg-rank-d)} .rank-badge[data-rank="C"]{--rc:var(--hg-rank-c)}
+.rank-badge[data-rank="B"]{--rc:var(--hg-rank-b)} .rank-badge[data-rank="A"]{--rc:var(--hg-rank-a)}
+.rank-badge[data-rank="S"]{--rc:var(--hg-rank-s)}
+
+/* Quest item: name · progress count · state */
+.quest-item {
+  display: grid; grid-template-columns: 1fr auto; align-items: center; gap: var(--sp-3);
+  min-height: var(--hg-tap-min); padding: var(--sp-3) 0; border-bottom: 1px dashed var(--hg-panel-line);
+}
+.quest-item__name { font: 600 var(--fs-md) var(--font-ui); color: var(--hg-text); }
+.quest-item__count { font: 700 var(--fs-md) var(--font-mono); color: var(--hg-text-muted); font-variant-numeric: tabular-nums; }
+.quest-item.is-done .quest-item__count { color: var(--hg-success); }
+.quest-item.is-done .quest-item__count::after { content: " ✓"; }
+
+/* ========================== Motion ========================== */
+@keyframes hg-pop {
+  0%   { opacity: 0; transform: scale(.86) translateY(8px); filter: brightness(1.8); }
+  60%  { opacity: 1; transform: scale(1.03); }
+  100% { opacity: 1; transform: scale(1); filter: brightness(1); }
+}
+@keyframes hg-pulse {
+  0%, 100% { box-shadow: var(--hg-glow-md), var(--hg-shadow-drop); }
+  50%      { box-shadow: var(--hg-glow-lg), var(--hg-shadow-drop); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .levelup-popup { animation: none; }
+  .xp-bar__fill, .stat-row__plus { transition: none; }
+}
