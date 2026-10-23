@@ -200,3 +200,11 @@ button.card{width:100%;text-align:left;cursor:pointer;font:inherit}
 @keyframes lu-scan{to{top:110%}}
 @keyframes lu-spin{to{transform:rotate(360deg)}}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+/* Exercise picker (New routine): group filter chips + group headers */
+.exchips{display:flex;gap:8px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding:2px 0 10px;margin:0 0 4px;position:sticky;top:-22px;z-index:2;background:var(--color-surface);scrollbar-width:none}
+.exchips::-webkit-scrollbar{display:none}
+.exchip{flex:0 0 auto;min-height:36px;padding:6px 14px;border-radius:999px;border:var(--border-width) solid var(--border-color);background:var(--color-window);color:var(--color-text-muted);font-size:14px;cursor:pointer;white-space:nowrap}
+.exchip[aria-pressed="true"]{color:var(--color-text);border-color:var(--color-primary-2);box-shadow:var(--glow)}
+.exgroup{margin:14px 0 8px;font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--color-text-muted)}
+.exgroup span{opacity:.7;font-weight:400}
+#res .opt b{font-size:16px;line-height:1.25}

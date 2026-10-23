@@ -28,7 +28,9 @@ const allPlans = () => PLANS.concat(GM.SKILL_PLANS.filter(p => has(p.skill)));
 const availablePlans = (eq = S.profile.equip || "gym") => allPlans().filter(p => equipRank[p.equip] <= equipRank[eq]);
 const planById = id => PLANS.concat(GM.SKILL_PLANS).find(p => p.id === id);
 const fmtTime = s => { s = Math.max(0, Math.round(s)); const m = Math.floor(s / 60), x = s % 60; return m + ":" + String(x).padStart(2, "0"); };
-const exTarget = e => (e.t ? e.t + "s" : e.r + " reps") + (e.side ? " each side" : "");
+const repRange = e => { if (!e.rr) return null; const [lo, hi] = String(e.rr).split("-").map(Number); return e.r >= lo && e.r <= hi ? lo + "–" + hi : null; };
+const eachLbl = e => e.side ? " each " + (e.each === "arm" || e.each === "leg" ? e.each : "side") : "";
+const exTarget = e => (e.t ? e.t + "s" : (repRange(e) || e.r) + " reps") + eachLbl(e);
 const dayKey = d => { d = new Date(d); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); };
 const fmtDate = d => new Date(d).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
 function toast(msg) { const t = document.createElement("div"); t.className = "toast"; t.textContent = msg; document.body.appendChild(t); setTimeout(() => t.remove(), 2400); }
@@ -455,7 +457,7 @@ VIEWS.train = () => {
     <h3 style="margin-top:6px">${allDone ? "All sets done ✓" : `Set ${si + 1} of ${L.length}`}</h3>
     ${e.t ? `<div class="big" id="timer">${fmtTime(A.timer ? timerLeft() : cur.sec)}</div>
         <div class="stepper" style="margin-bottom:12px"><button data-adj="sec" data-d="-5" aria-label="Less time">−</button><div class="lbl"><div class="v">${cur.sec}s</div><div class="u">target time</div></div><button data-adj="sec" data-d="5" aria-label="More time">+</button></div>`
-      : `<div class="stepper" style="margin:8px 0 12px"><button data-adj="reps" data-d="-1" aria-label="Fewer reps">−</button><div class="lbl"><div class="v">${cur.reps}</div><div class="u">reps${e.side ? " each side" : ""}</div></div><button data-adj="reps" data-d="1" aria-label="More reps">+</button></div>`}
+      : `<div class="stepper" style="margin:8px 0 12px"><button data-adj="reps" data-d="-1" aria-label="Fewer reps">−</button><div class="lbl"><div class="v">${cur.reps}</div><div class="u">reps${eachLbl(e)}</div></div><button data-adj="reps" data-d="1" aria-label="More reps">+</button></div>`}
     ${e.w ? `<div class="stepper" style="margin-bottom:12px"><button data-adj="weight" data-d="-${wStep}" aria-label="Less weight">−</button><div class="lbl"><div class="v">${cur.weight || 0}</div><div class="u">${unit} (tap to type)</div></div><button data-adj="weight" data-d="${wStep}" aria-label="More weight">+</button></div>` : ""}
     <details open><summary class="linkbtn" style="list-style:none">Form cues</summary><ul class="cues">${e.c.map(c => `<li>${h(c)}</li>`).join("")}</ul></details>
     ${GM.VARIATIONS.filter(v => has(v.skill) && v.re.test(e.n)).map(v => `<div class="system-window skillhint small"><span class="label">Skill · ${h(GM.SKILLS.find(x => x.id === v.skill).name)}</span><p style="margin:6px 0 0">${h(v.text)}</p></div>`).join("")}
@@ -592,10 +594,24 @@ VIEWS.session = id => {
   $("#del").onclick = () => confirmSheet("Delete this workout?", "It will be removed from your history and stats.", "Delete", () => { S.history = S.history.filter(s => s.id !== id); save(); go("/history"); }, true);
 };
 
-// ---------- Custom routines (free: up to 3) ----------
+// ---------- Custom routines (free: up to 4) ----------
+// Muscle group for plan exercises that aren't in the gym library (window.HG_LIBRARY in plans.js).
+function groupFor(e) {
+  const n = e.n.toLowerCase();
+  if (/(stretch|cat-cow|90\/90|thread|child|circle|mobility|y-t-w|snow angel|breathing|walk-out|hip flexor|good morning|hinge)/.test(n)) return "Mobility";
+  if (/(plank|dead bug|bird dog|hollow|crunch|sit-up|flutter|bicycle|knee raise|leg raise|pallof|superman|v-up|toe touch|core|russian)/.test(n)) return "Core";
+  if (/(jack|high knees|mountain|burpee|march|run|jog|walk|thrust|climber|fast feet|skater|shuffle|sprint|jump|hop|bear|tuck|broad|bound|interval)/.test(n)) return "Conditioning";
+  if (/(curl|tricep|kickback|extension|dip|pushdown|pressdown|wrist)/.test(n) && !/leg curl|leg extension/.test(n)) return "Arms";
+  if (/(row|pull|chin|lat |superman|shrug|deadlift(?! .*romanian))/.test(n) && !/romanian|rdl/.test(n)) return "Back & Traps";
+  if (/(squat|lunge|leg|calf|glute|bridge|rdl|romanian|step-up|hip thrust|wall sit|deadlift)/.test(n)) return "Legs";
+  if (/(push-up|press|bench|fly|raise|chest|shoulder|pike|face pull)/.test(n)) return "Chest & Shoulders";
+  return "Full body";
+}
 function allExercises() {
-  const m = new Map();
-  for (const p of availablePlans()) for (const w of p.workouts) for (const e of w.ex) if (!m.has(e.n)) m.set(e.n, Object.assign({}, e, { equip: p.equip }));
+  const LIB = window.HG_LIBRARY || [], m = new Map(), key = n => n.toLowerCase().trim();
+  const taken = new Set(); for (const e of LIB) { taken.add(key(e.n)); for (const a of e.same || []) taken.add(key(a)); }
+  for (const p of availablePlans()) for (const w of p.workouts) for (const e of w.ex) { const k = key(e.n); if (!m.has(k) && !taken.has(k)) m.set(k, Object.assign({}, e, { equip: p.equip, g: groupFor(e) })); }
+  for (const e of LIB) m.set(key(e.n), Object.assign({}, e));
   return [...m.values()].sort((a, b) => a.n.localeCompare(b.n));
 }
 VIEWS.routines = () => {
@@ -619,7 +635,7 @@ VIEWS.redit = id => {
     <label class="field"><span>Name</span><input id="rname" maxlength="40" placeholder="e.g. Quick upper body" value="${h(draft.name)}"></label>
     ${draft.ex.length ? draft.ex.map((e, k) => `<div class="card"><div class="row between"><b>${k + 1}. ${h(e.n)}</b><button class="linkbtn" data-rm="${k}" style="color:var(--color-danger)">Remove</button></div>
       <div class="row" style="margin-top:8px;gap:8px"><label class="field" style="flex:1;margin:0"><span class="small">Sets</span><input type="number" inputmode="numeric" min="1" max="10" data-k="${k}" data-f="s" value="${e.s}"></label>
-      <label class="field" style="flex:1;margin:0"><span class="small">${e.t ? "Seconds" : "Reps"}</span><input type="number" inputmode="numeric" min="1" max="300" data-k="${k}" data-f="${e.t ? "t" : "r"}" value="${e.t || e.r}"></label>
+      <label class="field" style="flex:1;margin:0"><span class="small">${e.t ? "Seconds" : "Reps" + (e.rr ? " " + h(String(e.rr).replace("-", "–")) : "")}</span><input type="number" inputmode="numeric" min="1" max="300" data-k="${k}" data-f="${e.t ? "t" : "r"}" value="${e.t || e.r}"></label>
       <label class="field" style="flex:1;margin:0"><span class="small">Rest (s)</span><input type="number" inputmode="numeric" min="0" max="600" data-k="${k}" data-f="rest" value="${e.rest}"></label></div></div>`).join("")
       : `<div class="card center muted">No exercises yet.</div>`}
     <div class="stack" style="margin-top:14px"><button class="btn ghost" id="add">+ Add exercise</button><button class="btn" id="save" ${draft.ex.length ? "" : "disabled"}>Save routine</button>
@@ -628,7 +644,7 @@ VIEWS.redit = id => {
   app.querySelectorAll("input[data-k]").forEach(inp => inp.onchange = () => { const v = parseInt(inp.value); if (!isNaN(v)) draft.ex[+inp.dataset.k][inp.dataset.f] = Math.max(inp.dataset.f === "rest" ? 0 : 1, v); });
   app.querySelectorAll("[data-rm]").forEach(b => b.onclick = () => { draft.ex.splice(+b.dataset.rm, 1); VIEWS.redit(id); });
   $("#back").onclick = () => { draft = null; go("/routines"); };
-  $("#add").onclick = () => pickExercise(e => { draft.ex.push({ n: e.n, s: e.s, rest: e.rest, c: e.c, ...(e.t ? { t: e.t } : { r: e.r }), ...(e.side ? { side: true } : {}), ...(e.w ? { w: true } : {}) }); VIEWS.redit(id); });
+  $("#add").onclick = () => pickExercise(e => { draft.ex.push({ n: e.n, s: e.s, rest: e.rest, c: e.c, ...(e.t ? { t: e.t } : { r: e.r }), ...(e.rr && !e.t ? { rr: e.rr } : {}), ...(e.side ? { side: true } : {}), ...(e.each ? { each: e.each } : {}), ...(e.w ? { w: true } : {}) }); VIEWS.redit(id); });
   $("#save").onclick = () => {
     if (!draft.ex.length) return; const r = structuredClone(draft); delete r._for; r.name = r.name.trim() || "My routine " + (S.routines.length + 1);
     const i = S.routines.findIndex(x => x.id === r.id);
@@ -638,13 +654,19 @@ VIEWS.redit = id => {
   if ($("#del")) $("#del").onclick = () => confirmSheet("Delete routine?", "This can't be undone.", "Delete", () => { S.routines = S.routines.filter(x => x.id !== id); save(); draft = null; go("/routines"); }, true);
 };
 function pickExercise(cb) {
-  const all = allExercises();
+  const all = allExercises(), GR = window.HG_GROUPS || [];
+  const groups = [...new Set(all.map(e => e.g))].sort((a, b) => (GR.indexOf(a) + 1 || 99) - (GR.indexOf(b) + 1 || 99));
+  let fg = "all";
   sheet(`<div class="row between"><h2 style="margin:0">Add exercise</h2><button class="iconbtn" data-close-btn aria-label="Close">✕</button></div>
-    <label class="field" style="margin-top:12px"><input id="q" type="search" placeholder="Search ${all.length} exercises" autocomplete="off"></label><div id="res"></div>`, el => {
-    const draw = q => { const list = all.filter(e => e.n.toLowerCase().includes(q.toLowerCase())).slice(0, 60);
-      $("#res", el).innerHTML = list.map((e, k) => `<button class="opt" data-n="${h(e.n)}" style="margin-bottom:8px"><span><b>${h(e.n)}</b><span>${h(EQL[e.equip])} · ${e.s} × ${exTarget(e)}</span></span></button>`).join("") || `<p class="muted">No matches.</p>`;
+    <label class="field" style="margin-top:12px"><input id="q" type="search" placeholder="Search ${all.length} exercises" autocomplete="off"></label>
+    <div class="exchips" role="group" aria-label="Muscle group">${[["all", "All"], ...groups.map(g => [g, g])].map(([v, l]) => `<button class="exchip" data-g="${h(v)}" aria-pressed="${v === "all"}">${h(l)}</button>`).join("")}</div>
+    <div id="res"></div>`, el => {
+    const draw = () => { const q = $("#q", el).value.toLowerCase().trim();
+      const list = all.filter(e => (fg === "all" || e.g === fg) && (!q || e.n.toLowerCase().includes(q) || e.g.toLowerCase().includes(q)));
+      $("#res", el).innerHTML = groups.map(g => { const xs = list.filter(e => e.g === g); return xs.length ? `<h4 class="exgroup">${h(g)} <span>${xs.length}</span></h4>` + xs.map(e => `<button class="opt" data-n="${h(e.n)}" style="margin-bottom:8px"><span><b>${h(e.n)}</b><span>${h(EQL[e.equip])} · ${e.s} × ${exTarget(e)}</span></span></button>`).join("") : ""; }).join("") || `<p class="muted">No matches.</p>`;
       $("#res", el).querySelectorAll("[data-n]").forEach(b => b.onclick = () => { closeSheet(); cb(all.find(x => x.n === b.dataset.n)); }); };
-    draw(""); $("#q", el).oninput = e => draw(e.target.value);
+    el.querySelectorAll("[data-g]").forEach(b => b.onclick = () => { fg = b.dataset.g; el.querySelectorAll("[data-g]").forEach(x => x.setAttribute("aria-pressed", x === b)); draw(); });
+    draw(); $("#q", el).oninput = draw;
   });
 }
 

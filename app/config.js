@@ -2,7 +2,7 @@
 window.HG_CONFIG = {
   APP_NAME: "Hardgrain",
   TAGLINE: "Built rep by rep.",
-  FREE_ROUTINE_LIMIT: 3,
+  FREE_ROUTINE_LIMIT: 4,
   PRO_MONTHLY: "$3.99",
   PRO_YEARLY: "$24.99",
   PRO_TRIAL_DAYS: 7,

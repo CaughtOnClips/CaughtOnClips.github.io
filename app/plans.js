@@ -209,5 +209,76 @@ window.HG_PLANS = [
   ]
 }
 ];
+// ---------------- Exercise library for "New routine" (custom routine builder) ----------------
+// Gym exercises grouped by muscle. L(name, sets, "low-high" reps, rest, cues, opts)
+// r = low end of the range (pre-filled), rr = range label. same = names of plan exercises this entry replaces in the picker (merged duplicates).
+// side + each ("arm"/"leg") = reps are entered per arm/leg; XP counts the reps exactly as entered.
+const L = (n, s, rr, rest, c, o = {}) => Object.assign({ n, s, r: parseInt(rr), rr: String(rr).includes("-") ? rr : undefined, rest, c, w: true, equip: "gym" }, o);
+const ARM = { side: true, each: "arm" }, LEG = { side: true, each: "leg" };
+window.HG_GROUPS = ["Arms", "Back & Traps", "Legs", "Chest & Shoulders", "Core", "Conditioning", "Mobility", "Full body"];
+window.HG_LIBRARY = [
+// ARMS
+L("Close-Grip Bench Press", 4, "6-10", 120, ["Flat, incline or decline bench", "Hands about shoulder-width", "Elbows tucked close to your sides", "Press to lockout, squeeze triceps"], { g: "Arms" }),
+L("Incline Bench French Press", 4, "8-12", 90, ["Lie on an incline bench", "Lower the weight behind your head, elbows pointing up", "Keep upper arms still", "Extend fully"], { g: "Arms" }),
+L("Dumbbell Kickbacks", 4, "8-12", 60, ["Hinge forward, upper arm parallel to the floor", "Extend the elbow until the arm is straight", "Squeeze at the top", "Lower with control"], { g: "Arms" }),
+L("Cable Pressdown (rope or bar)", 4, "8-12", 60, ["Elbows pinned to your sides", "Press down to full lockout", "Spread the rope at the bottom", "Control the way up"], { g: "Arms", same: ["Triceps rope pushdown"] }),
+L("Reverse-Grip Pressdown", 4, "8-12", 60, ["Palms facing up on the bar", "Elbows pinned to your sides", "Press down to lockout", "Slow return"], { g: "Arms" }),
+L("Overhead Rope Extension", 4, "8-12", 60, ["Face away from the cable, rope behind your head", "Elbows pointing forward", "Extend fully overhead", "Feel the stretch on the way back"], { g: "Arms" }),
+L("Standing Barbell Curl", 4, "6-10", 90, ["Hands shoulder-width, palms up", "Elbows stay at your sides", "No swinging", "Lower slowly"], { g: "Arms" }),
+L("Seated Dumbbell Curl (twist at top)", 4, "8-10", 60, ["Sit tall, arms hanging", "Curl and turn the pinky up at the top", "Squeeze the biceps", "Reps are per arm"], Object.assign({ g: "Arms" }, ARM)),
+L("Seated Hammer Curl (incline bench)", 4, "8-10", 60, ["Lean back on an incline bench", "Palms face each other", "Curl without moving the elbows", "Lower slowly"], { g: "Arms" }),
+L("Dumbbell Hammer Curl", 4, "8-12", 60, ["Standing, palms face each other", "Elbows at your sides", "Curl and squeeze", "Lower slowly"], { g: "Arms", same: ["Hammer curl"] }),
+L("Reverse Curl (EZ-bar, barbell or cable)", 4, "8-12", 60, ["Palms facing down", "Elbows at your sides", "Curl up, keep wrists straight", "Lower slowly"], { g: "Arms" }),
+L("Machine Preacher Curl or High Cable Concentration Curl", 4, "8-12", 60, ["Upper arm supported or fixed in place", "Curl all the way up and squeeze", "Lower to a full stretch", "Slow and controlled"], { g: "Arms" }),
+L("Sweet 16 Curls", 4, 16, 60, ["16 reps per set: 8 partial reps in the bottom half, then 8 full reps", "Free weight or cable", "Elbows stay at your sides", "Use a lighter weight than normal curls"], { g: "Arms" }),
+L("Reverse Wrist Curl", 4, "10-15", 45, ["Superset with Barbell Wrist Curl", "Forearms on your thighs or a bench, palms down", "Lift the back of the hands up", "Lower slowly"], { g: "Arms" }),
+L("Barbell Wrist Curl", 4, "10-15", 45, ["Superset with Reverse Wrist Curl", "Forearms on your thighs or a bench, palms up", "Curl the wrists up", "Let the bar roll to the fingers and back"], { g: "Arms" }),
+// BACK & TRAPS
+L("Dumbbell Pullover", 4, "8-12", 90, ["Lie across or along a bench", "Arms slightly bent, lower the dumbbell behind your head", "Feel the stretch in lats and chest", "Pull back over your chest"], { g: "Back & Traps" }),
+L("Barbell Row or Wide T-Bar Row", 4, "8-12", 90, ["Hinge forward, flat back", "Pull to the lower ribs", "Squeeze shoulder blades together", "Lower with control"], { g: "Back & Traps", same: ["Barbell row"] }),
+L("Underhand Rope Row", 4, "8-12", 90, ["Cable row with an underhand grip", "Chest tall", "Pull elbows back past your sides", "Slow return"], { g: "Back & Traps" }),
+L("Close-Grip T-Bar Row", 4, "8-12", 90, ["Close neutral grip", "Chest up, back flat", "Pull to the chest", "Pause and lower slowly"], { g: "Back & Traps" }),
+L("Dumbbell Row or Plate-Loaded Machine Row", 4, 10, 60, ["One arm at a time", "Flat back, brace with the free hand", "Pull the elbow toward your hip", "Reps are per arm"], Object.assign({ g: "Back & Traps", same: ["One-arm dumbbell row", "Dumbbell row"] }, ARM)),
+L("Wide-Grip Pulldown or Pull-Ups", 3, "8-12", 90, ["Hands wider than shoulders", "Chest up, pull to the upper chest", "Drive elbows down", "Control the way up"], { g: "Back & Traps", same: ["Lat pulldown"] }),
+L("Close-Grip Pulldown (V handle)", 3, "8-12", 90, ["V handle, palms facing", "Lean back slightly", "Pull to the upper chest", "Full stretch at the top"], { g: "Back & Traps" }),
+L("Reverse-Grip Pulldown", 3, "8-12", 90, ["Underhand grip, shoulder-width", "Pull to the upper chest", "Squeeze lats", "Slow return"], { g: "Back & Traps" }),
+L("Straight-Arm Pulldown", 4, "8-12", 60, ["Arms nearly straight", "Hinge slightly forward", "Sweep the bar or rope down to your thighs", "Control the way up"], { g: "Back & Traps" }),
+L("Seated Cable Row (close grip)", 3, "8-12", 90, ["Close grip handle", "Chest tall, no rocking", "Pull to the belly", "Squeeze shoulder blades"], { g: "Back & Traps", same: ["Seated cable row"] }),
+L("Cable Upright Row", 4, "8-12", 60, ["Bar from the low cable", "Pull up along your body to chest height", "Elbows lead, higher than wrists", "Lower slowly"], { g: "Back & Traps" }),
+L("Shrugs (Smith machine or barbell)", 4, "8-12", 60, ["Arms straight", "Lift shoulders toward your ears", "Pause at the top", "No rolling"], { g: "Back & Traps" }),
+// LEGS
+L("Hip Abductor Machine", 2, 15, 45, ["Optional warm-up", "Push knees out against the pads", "Pause, return slowly"], { g: "Legs" }),
+L("Hip Adductor Machine", 2, 15, 45, ["Optional warm-up", "Squeeze knees together against the pads", "Pause, return slowly"], { g: "Legs" }),
+L("Leg Extension", 4, "10-15", 60, ["Back against the pad", "Extend to straight legs", "Squeeze the quads at the top", "Lower slowly"], { g: "Legs" }),
+L("Barbell Back Squat", 4, "6-10", 120, ["Bar on upper back, brace hard", "Sit down between your hips", "Knees track over toes", "Drive up through the whole foot"], { g: "Legs", same: ["Barbell back squat"] }),
+L("Front Squat or Hack Squat Machine", 4, "6-10", 120, ["Chest tall", "Knees forward over toes", "Go as deep as form allows", "Drive up through the whole foot"], { g: "Legs" }),
+L("Leg Press (feet close)", 4, "10-15", 90, ["Feet close together on the platform", "Lower until knees are well bent", "Don't lock knees at the top", "Lower back stays on the pad"], { g: "Legs" }),
+L("Goblet Squat", 4, "10-15", 75, ["Hold one dumbbell at your chest", "Sit down between your knees", "Chest tall", "Drive up"], { g: "Legs", same: ["Goblet squat"] }),
+L("Walking Lunges (dumbbells)", 4, 10, 90, ["A dumbbell in each hand", "Long steps, back knee toward the floor", "Torso tall", "10 steps per leg"], Object.assign({ g: "Legs", same: ["Dumbbell walking lunge"] }, LEG)),
+L("Romanian Deadlift", 4, "8-12", 120, ["Soft knees, push hips back", "Bar or dumbbells close to legs", "Flat back, feel the hamstring stretch", "Squeeze glutes to stand"], { g: "Legs", same: ["Romanian deadlift"] }),
+L("Seated Hamstring Curl", 4, "10-15", 60, ["Thigh pad snug", "Curl heels under you", "Squeeze, then return slowly"], { g: "Legs" }),
+L("Lying Leg Curl", 4, "10-15", 60, ["Also called lying hamstring curl", "Hips pressed into the pad", "Curl and squeeze", "Lower slowly"], { g: "Legs", same: ["Lying leg curl"] }),
+L("Lying Leg Curl (feet close)", 4, "10-15", 60, ["Feet together", "Hips pressed into the pad", "Curl and squeeze", "Lower slowly"], { g: "Legs" }),
+L("Lying Leg Curl (feet wide)", 4, "10-15", 60, ["Feet wider than hips", "Hips pressed into the pad", "Curl and squeeze", "Lower slowly"], { g: "Legs" }),
+L("Standing Calf Raise", 4, "10-15", 60, ["Full stretch at the bottom", "Rise high onto the toes", "Pause at the top"], { g: "Legs", same: ["Standing calf raise"] }),
+L("Seated Calf Raise", 4, "10-15", 60, ["Pad on the lower thighs", "Full stretch at the bottom", "Pause at the top"], { g: "Legs" }),
+// CHEST & SHOULDERS
+L("Incline Barbell Bench", 4, "6-10", 120, ["Bench at 30-45°", "Lower the bar to the upper chest", "Elbows about 45°", "Press up and slightly back"], { g: "Chest & Shoulders" }),
+L("Incline Bench (dumbbell or plate-loaded machine)", 4, "6-10", 120, ["Bench at 30-45°", "Lower to the upper chest", "Press up, don't clang the weights", "Control the way down"], { g: "Chest & Shoulders", same: ["Incline dumbbell press"] }),
+L("Flat Barbell Bench or Weighted Dips", 4, "6-10", 120, ["Bench: shoulder blades pinched, bar to mid-chest", "Dips: lean forward slightly, lower until upper arms are parallel", "Press to lockout"], { g: "Chest & Shoulders", same: ["Barbell bench press"] }),
+L("Flat Bench (dumbbell or plate-loaded machine)", 4, "6-10", 120, ["Shoulder blades pinched", "Lower to mid-chest", "Press up and together", "Control the way down"], { g: "Chest & Shoulders", same: ["Dumbbell bench press (bench or floor)"] }),
+L("Weighted Dips or Chest Press Machine", 4, "6-10", 120, ["Dips: lean forward, lower until upper arms are parallel", "Machine: handles at mid-chest", "Press to lockout", "Slow lowering"], { g: "Chest & Shoulders" }),
+L("Cable Crossover (high to low)", 3, "12-15", 60, ["Cables set high", "Slight bend in the elbows", "Sweep the hands down and together", "Squeeze the chest"], { g: "Chest & Shoulders" }),
+L("Cable Crossover (low to high)", 3, "12-15", 60, ["Cables set low", "Slight bend in the elbows", "Sweep the hands up and together", "Squeeze the upper chest"], { g: "Chest & Shoulders" }),
+L("Pec Fly / Chest Fly Machine", 3, "12-15", 60, ["Seat so handles are at chest height", "Slight bend in the elbows", "Bring hands together, squeeze", "Open slowly to a stretch"], { g: "Chest & Shoulders" }),
+L("Arnold Press", 4, "6-10", 90, ["Start palms facing you at shoulder height", "Rotate palms forward as you press up", "Reverse on the way down", "Ribs down, no arching"], { g: "Chest & Shoulders", same: ["Arnold press"] }),
+L("Seated Shoulder Press (dumbbell or plate-loaded machine)", 4, "6-10", 90, ["Back against the pad", "Press overhead without arching", "Lower to about ear height", "Control the way down"], { g: "Chest & Shoulders", same: ["Seated dumbbell shoulder press"] }),
+L("Machine Shoulder Press (or Smith machine)", 4, "6-10", 90, ["Back against the pad", "Handles or bar at shoulder height", "Press overhead", "Lower slowly"], { g: "Chest & Shoulders" }),
+L("Cable Lateral Raise", 3, "10-12", 60, ["One arm at a time, cable at your side", "Raise out to shoulder height", "Lead with the elbow", "Reps are per arm"], Object.assign({ g: "Chest & Shoulders", same: ["Cable lateral raise"] }, ARM)),
+L("Seated Dumbbell Lateral Raise", 3, "10-12", 60, ["Sit tall at the end of a bench", "Raise out to shoulder height", "Slight bend in the elbows", "Reps are per arm"], Object.assign({ g: "Chest & Shoulders" }, ARM)),
+L("Front Raise (bar, dumbbell or cable)", 3, "10-12", 60, ["Arms nearly straight", "Raise to shoulder height in front", "No swinging", "Lower slowly"], { g: "Chest & Shoulders" }),
+L("Rear Delt Fly (dumbbell)", 3, "10-12", 60, ["Hinge forward, flat back", "Raise arms out wide", "Squeeze the rear shoulders", "Reps are per arm"], Object.assign({ g: "Chest & Shoulders", same: ["Dumbbell rear-delt fly"] }, ARM)),
+L("Rope Face Pull", 3, "10-12", 60, ["Rope at upper-chest height", "Pull toward your face, hands apart", "Elbows high", "Squeeze upper back"], { g: "Chest & Shoulders", same: ["Face pull"] })
+];
 window.HG_EQUIP_LABEL = { none: "No equipment", dumbbells: "Dumbbells", gym: "Full gym" };
 })();
