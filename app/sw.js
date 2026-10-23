@@ -1,7 +1,7 @@
 // Service worker: offline app shell + runtime cache for fonts.
-const VERSION = "hg-v9";
+const VERSION = "hg-v10";
 const SHELL = ["./", "index.html", "hardgrain-theme.css", "theme.css", "app.css", "app.js", "config.js", "plans.js", "game.js", "manifest.webmanifest",
-  "icons/apple-touch-icon.png", "icons/icon-192.png", "icons/icon-512.png", "icons/favicon-32.png", "icons/mark.svg",
+  "icons/apple-touch-icon.png", "icons/icon-192.png", "icons/icon-512.png", "icons/favicon-32.png", "icons/mark.svg", "sounds/skill-unlock.mp3",
   "/", "/index.html", "/privacy.html", "/terms.html", "/support.html", "/styles.css", "/icon.png", "/hardgrain-theme.css", "/hardgrain-mark.svg"];
 self.addEventListener("install", e => {
   e.waitUntil(caches.open(VERSION).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));

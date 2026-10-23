@@ -68,7 +68,23 @@ function nextWorkout(p) {
 
 // ---------- Sound / wake lock ----------
 let actx = null, wakeLock = null;
-function unlockAudio() { try { if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)(); if (actx.state === "suspended") actx.resume(); } catch (e) {} }
+function unlockAudio() { try { if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)(); if (actx.state === "suspended") actx.resume(); decodeSkillSfx(); } catch (e) {} }
+// Skill-unlock sound (sounds/skill-unlock.mp3): preloaded, decoded into Web Audio once the context exists (first tap), HTMLAudio fallback.
+const SKILL_SFX_URL = "sounds/skill-unlock.mp3", SKILL_SFX_VOL = 0.5;
+let skillSfxRaw = null, skillSfxBuf = null, skillSfxDecoding = false, skillSfxEl = null;
+try { fetch(SKILL_SFX_URL).then(r => r.ok ? r.arrayBuffer() : null).then(ab => { skillSfxRaw = ab; decodeSkillSfx(); }).catch(() => {}); } catch (e) {}
+try { skillSfxEl = new Audio(SKILL_SFX_URL); skillSfxEl.preload = "auto"; skillSfxEl.volume = SKILL_SFX_VOL; } catch (e) {}
+function decodeSkillSfx() {
+  if (!actx || !skillSfxRaw || skillSfxBuf || skillSfxDecoding) return; skillSfxDecoding = true;
+  try { const p = actx.decodeAudioData(skillSfxRaw.slice(0), b => { skillSfxBuf = b; }, () => { skillSfxDecoding = false; }); if (p && p.then) p.then(b => { skillSfxBuf = b; }).catch(() => { skillSfxDecoding = false; }); } catch (e) { skillSfxDecoding = false; }
+}
+function playSkillSfx() {
+  try { unlockAudio();
+    if (actx && skillSfxBuf) { const src = actx.createBufferSource(), g = actx.createGain(); g.gain.value = SKILL_SFX_VOL; src.buffer = skillSfxBuf; src.connect(g); g.connect(actx.destination); src.start(); return true; }
+    if (skillSfxEl) { skillSfxEl.currentTime = 0; const pr = skillSfxEl.play(); if (pr && pr.catch) pr.catch(() => {}); return true; }
+  } catch (e) {}
+  return false;
+}
 function beep(n = 1) { try { unlockAudio(); for (let i = 0; i < n; i++) { const o = actx.createOscillator(), g = actx.createGain(); o.frequency.value = 880; o.connect(g); g.connect(actx.destination); const t = actx.currentTime + i * 0.25; g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.3, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.18); o.start(t); o.stop(t + 0.2); } } catch (e) {} if (navigator.vibrate) navigator.vibrate(200); }
 async function keepAwake(on) { try { if (on && "wakeLock" in navigator && !wakeLock) { wakeLock = await navigator.wakeLock.request("screen"); wakeLock.addEventListener("release", () => wakeLock = null); } else if (!on && wakeLock) { await wakeLock.release(); wakeLock = null; } } catch (e) {} }
 document.addEventListener("pointerdown", unlockAudio, { once: true });
@@ -190,6 +206,7 @@ const planXpEstimate = w => w.ex.reduce((a, e) => a + e.s * GM.setXp({ n: e.n, t
 // ---------- Notices (full-screen) ----------
 let popupOpen = false;
 function fanfare(kind) {
+  if (kind === "skill" && playSkillSfx()) { if (navigator.vibrate) navigator.vibrate([80]); return; }
   try { unlockAudio(); const notes = kind === "levelup" || kind === "rankup" ? [523, 659, 784, 1047] : kind === "quest" ? [659, 880, 1175] : [784, 1047];
     notes.forEach((f, i) => { const o = actx.createOscillator(), g = actx.createGain(); o.type = "triangle"; o.frequency.value = f; o.connect(g); g.connect(actx.destination); const t = actx.currentTime + i * 0.12; g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.22, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.35); o.start(t); o.stop(t + 0.4); }); } catch (e) {}
   if (navigator.vibrate) navigator.vibrate(kind === "levelup" ? [60, 40, 60, 40, 160] : [80]);
