@@ -14,7 +14,7 @@ const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 
 const GM = window.HG_GAME;
 const fresh = () => ({ profile: { goal: null, level: null, equip: null, units: "lb", agreedAt: null }, history: [], routines: [], activePlanId: null, active: null, lastWeights: {}, game: GM.newGame() });
 let S = load();
-function load() { try { const d = JSON.parse(localStorage.getItem(KEY)); if (!d) return fresh(); const f = fresh(); return Object.assign(f, d, { profile: Object.assign(f.profile, d.profile), game: Object.assign(f.game, d.game, { stats: Object.assign(f.game.stats, d.game && d.game.stats) }) }); } catch (e) { return fresh(); } }
+function load() { try { const d = JSON.parse(localStorage.getItem(KEY)); if (!d) return fresh(); const f = fresh(); const g = Object.assign(f.game, d.game, { stats: Object.assign(f.game.stats, d.game && d.game.stats), battles: Object.assign({ cleared: {} }, f.game.battles, d.game && d.game.battles, { cleared: Object.assign({}, (f.game.battles && f.game.battles.cleared) || {}, (d.game && d.game.battles && d.game.battles.cleared) || {}) }) }); return Object.assign(f, d, { profile: Object.assign(f.profile, d.profile), game: g }); } catch (e) { return fresh(); } }
 function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { toast("Couldn't save. Storage may be full."); } }
 const onboarded = () => !!S.profile.agreedAt;
 
@@ -119,8 +119,9 @@ function ensureDaily() {
 }
 function addXp(n) {
   const G = S.game; n = Math.round(n); if (n <= 0) return 0;
-  const startL = G.level; G.xp += n; G.totalXp += n;
-  while (G.xp >= GM.xpToNext(G.level)) { G.xp -= GM.xpToNext(G.level); G.level++; G.points += GM.LEVEL_POINTS; for (const k in G.stats) G.stats[k] += GM.LEVEL_ALL_STATS; }
+  const startL = G.level, cap = GM.MAX_LEVEL; G.xp += n; G.totalXp += n;
+  while (G.level < cap && G.xp >= GM.xpToNext(G.level)) { G.xp -= GM.xpToNext(G.level); G.level++; G.points += GM.LEVEL_POINTS; for (const k in G.stats) G.stats[k] += GM.LEVEL_ALL_STATS; }
+  if (G.level >= cap) { G.level = cap; const need = GM.xpToNext(G.level); if (G.xp > need) G.xp = need; }
   if (G.level > startL) { const lv = G.level - startL; vitShield(); queue({ kind: "levelup", from: startL, to: G.level, points: lv * GM.LEVEL_POINTS, all: lv * GM.LEVEL_ALL_STATS, trial: rankTrialOpen() ? nextRank() : null }); }
   return n;
 }
@@ -226,6 +227,7 @@ function showQueue() {
   else if (n.kind === "class-ready") { title = "Class change"; label = "Trial clear"; line = "You've proven the work. Choose your class."; primary = ["Choose class", "#/quests"]; }
   else if (n.kind === "class") { title = "Class change"; label = h(n.name); line = "New class set. The Ascendant path is yours."; chips = boostChips(n.boost); }
   else if (n.kind === "rest") { title = "Rest day"; label = "Rest logged"; line = "Recovery is training."; chips = chip("VIT +1", true) + chip("Streak kept", true); }
+  else if (n.kind === "battle") { title = "Rank Battle"; label = n.first ? "Boss clear" : "Rematch win"; big = n.first ? "✓" : `+${n.xp}`; line = `${h(n.name)} defeated.`; chips = chip(`+${n.xp} XP`, true) + (n.first ? chip("First clear", true) : chip("Rematch", true)); }
   else if (n.kind === "welcome") { title = "Notice"; label = "Lifter registered"; big = "1"; from = `RANK <b>E</b> · SPARK`; line = "Your first Daily Quest is ready. Clear it before midnight."; chips = chip(`+${GM.DAILY_POINTS} attribute pts on clear`) + chip(`${S.game.shields} streak shield`, true); primary = ["Open status", "#/home"]; }
   popupOpen = true;
   const el = document.createElement("div"); el.className = "levelup-overlay"; el.setAttribute("role", "alertdialog"); el.setAttribute("aria-label", (label || title).replace(/<[^>]+>/g, ""));
@@ -256,7 +258,7 @@ function confirmSheet(title, body, okLabel, onOk, danger) {
 // ---------- Router ----------
 const go = r => { location.hash = r; };
 window.addEventListener("hashchange", render);
-const TABS = [["home", "Status", "◈"], ["quests", "Quests", "❖"], ["plans", "Plans", "▤"], ["skills", "Skills", "✦"], ["history", "Log", "◷"]];
+const TABS = [["home", "Status", "◈"], ["quests", "Quests", "❖"], ["battle", "Battle", "⚔"], ["plans", "Plans", "▤"], ["skills", "Skills", "✦"], ["history", "Log", "◷"]];
 function setTabs(active) {
   if (!active) { tabs.hidden = true; document.body.classList.add("no-tabs"); return; }
   document.body.classList.remove("no-tabs"); tabs.hidden = false;
@@ -352,7 +354,7 @@ function statusWindow() {
   return `<div class="system-window" id="status"><div class="system-window__title">Status</div>
     <div class="head"><span class="rank-badge" data-rank="${r.k}" aria-label="Rank ${r.k} ${r.name}">${r.k}</span><div><b>${h(G.name || "Lifter")} · LV ${G.level}</b><small>Rank ${r.k} · ${r.name} · streak ${G.streak} day${G.streak === 1 ? "" : "s"}</small><small>${h(G.cls ? GM.CLASSES.find(c => c.id === G.cls).name : "No class")} · ${h(G.title)} · 🛡 ${G.shields}</small></div></div>
     <div class="xp-bar" role="progressbar" aria-label="XP" aria-valuemin="0" aria-valuemax="${need}" aria-valuenow="${G.xp}"><div class="xp-bar__fill" style="--xp:${(G.xp / need * 100).toFixed(1)}%"></div></div>
-    <div class="xpline"><span>${G.xp.toLocaleString()} / ${need.toLocaleString()} XP</span><span>${nr ? (G.level >= nr.level ? `<a href="#/quests">Rank Trial ${nr.k} open ›</a>` : `Rank ${nr.k} at Lv ${nr.level}`) : "Max rank"}</span></div>
+    <div class="xpline"><span>${G.xp.toLocaleString()} / ${need.toLocaleString()} XP</span><span>${G.level >= GM.MAX_LEVEL ? "Max level" : nr ? (G.level >= nr.level ? `<a href="#/quests">Rank Trial ${nr.k} open ›</a>` : `Rank ${nr.k} at Lv ${nr.level}`) : "Max rank"}</span></div>
     <div class="pts"><span>Attribute points</span><b id="pts">${left}</b></div>
     ${GM.STATS.map(([k, full, src, col]) => { const v = G.stats[k], p = pend[k] || 0; return `<div class="stat-row" style="--sc:var(${col})"><span class="stat-row__label">${k}<small>${src}</small></span><span class="stat-row__value">${v}${p ? ` <em>+${p}</em>` : ""}</span><button class="stat-row__plus" data-stat="${k}" aria-label="Add a point to ${full}" ${left > 0 ? "" : "disabled"}>+</button></div>`; }).join("")}
     ${used ? `<div class="row" style="margin-top:14px"><button class="btn sm ghost" style="flex:1" id="preset">Reset</button><button class="btn sm" style="flex:2" id="pconfirm">Confirm ${used} pt${used === 1 ? "" : "s"}</button></div>`
@@ -738,6 +740,205 @@ VIEWS.quests = () => {
 VIEWS.rtrial = () => { setTabs(null); if (!rankTrialOpen()) return go("/quests"); const t = GM.rankTrial(S.game.rankIdx + 1); startPreview(t.name, "Rank Trial", t.ex, { kind: "rank" }, "#/quests"); };
 VIEWS.ctrial = () => { setTabs(null); if (S.game.level < GM.CLASS_LEVEL) return go("/quests"); startPreview(GM.CLASS_TRIAL.name, "Class change", GM.CLASS_TRIAL.ex, { kind: "class" }, "#/quests"); };
 
+
+// ---------- Rank Battle ----------
+let fight = null; // in-memory combat state (not persisted mid-fight)
+function ensureBattles() {
+  const G = S.game;
+  if (!G.battles) G.battles = { cleared: {} };
+  if (!G.battles.cleared) G.battles.cleared = {};
+}
+function startFight(boss) {
+  const ps = GM.battlePlayerStats(S.game.stats);
+  fight = {
+    bossId: boss.id, bossName: boss.name, unlock: boss.unlock,
+    p: { hp: ps.maxHp, maxHp: ps.maxHp, atk: ps.atk, def: ps.def, crit: ps.crit, acc: ps.acc, resist: ps.resist, stam: ps.staminaMax, stamMax: ps.staminaMax, defending: false, guardTurns: 0, dot: 0, dotTurns: 0 },
+    e: { hp: boss.hp, maxHp: boss.hp, atk: boss.atk, def: boss.def, defending: false, shred: 0 },
+    log: [`${boss.name} enters the forge.`], over: null, busy: false
+  };
+}
+function pushLog(msg) { if (fight) { fight.log.push(msg); if (fight.log.length > 8) fight.log.shift(); } }
+function hitChance(acc) { return Math.random() < (acc == null ? 0.9 : acc); }
+function rollCrit(base, bonus) { return Math.random() < Math.min(0.85, (base || 0) + (bonus || 0)); }
+function calcDmg(atk, def, mult, crit) {
+  const raw = Math.max(1, Math.round((atk * (mult || 1) - def * 0.55) * (0.85 + Math.random() * 0.3)));
+  return Math.max(1, Math.round(raw * (crit ? 1.6 : 1)));
+}
+function applyPlayerDmg(amt) {
+  const P = fight.p; let d = amt;
+  if (P.defending) d = Math.round(d * 0.5);
+  if (P.guardTurns > 0) d = Math.round(d * 0.35);
+  d = Math.max(1, Math.round(d * (1 - (P.resist || 0))));
+  P.hp = Math.max(0, P.hp - d);
+  return d;
+}
+function applyEnemyDmg(amt) {
+  const E = fight.e; let d = amt;
+  if (E.defending) d = Math.round(d * 0.5);
+  const def = Math.max(0, E.def * (1 - (E.shred || 0)));
+  // atk already baked into amt via calcDmg; shred applied by lowering effective def at calc time preferred
+  E.hp = Math.max(0, E.hp - d);
+  return d;
+}
+function enemyTurn() {
+  const P = fight.p, E = fight.e;
+  if (E.hp <= 0) return;
+  // Simple AI: defend if low HP ~20%, else attack
+  E.defending = false;
+  if (E.hp / E.maxHp < 0.28 && Math.random() < 0.35) {
+    E.defending = true;
+    pushLog(`${fight.bossName} braces.`);
+  } else {
+    if (!hitChance(0.88)) { pushLog(`${fight.bossName} misses.`); }
+    else {
+      const crit = Math.random() < 0.08;
+      const dmg = calcDmg(E.atk, P.def, 1, crit);
+      const taken = applyPlayerDmg(dmg);
+      pushLog(`${fight.bossName}${crit ? " crits" : " hits"} for ${taken}.`);
+    }
+  }
+  // tick lifter DoT on enemy at end of round already applied; tick guard
+  if (P.guardTurns > 0) P.guardTurns--;
+  if (P.dotTurns > 0 && E.hp > 0) {
+    const burn = Math.max(1, Math.round(P.dot));
+    E.hp = Math.max(0, E.hp - burn);
+    pushLog(`Steady Burn deals ${burn}.`);
+    P.dotTurns--;
+  }
+  P.defending = false;
+  // small stamina regen
+  P.stam = Math.min(P.stamMax, P.stam + 1);
+  if (P.hp <= 0) { fight.over = "lose"; pushLog("You fall. Retry anytime."); }
+  else if (E.hp <= 0) finishWin();
+}
+function finishWin() {
+  ensureBattles();
+  const boss = GM.bossById(fight.bossId);
+  const first = !S.game.battles.cleared[fight.bossId];
+  const xp = first ? boss.xpClear : boss.xpRematch;
+  if (first) S.game.battles.cleared[fight.bossId] = new Date().toISOString();
+  fight.over = "win";
+  pushLog(first ? "First clear!" : "Rematch win.");
+  queue({ kind: "battle", name: boss.name, xp, first });
+  addXp(xp); checkProgress(); save();
+}
+function resolvePlayerAction(act, move) {
+  if (!fight || fight.over || fight.busy) return;
+  const P = fight.p, E = fight.e;
+  P.defending = false; E.defending = false;
+  if (act === "attack") {
+    if (!hitChance(P.acc)) pushLog("Your strike misses.");
+    else {
+      const crit = rollCrit(P.crit, 0);
+      const def = Math.max(0, E.def * (1 - (E.shred || 0)));
+      const dmg = calcDmg(P.atk, def, 1, crit);
+      E.hp = Math.max(0, E.hp - dmg);
+      pushLog(`You${crit ? " crit" : " hit"} for ${dmg}.`);
+    }
+  } else if (act === "defend") {
+    P.defending = true;
+    pushLog("You defend. Incoming damage cut.");
+  } else if (act === "special" && move) {
+    if (P.stam < move.cost) { toast("Not enough stamina"); return; }
+    P.stam -= move.cost;
+    if (move.kind === "dmg" || move.kind === "multi") {
+      const hits = move.hits || 1;
+      let total = 0;
+      for (let i = 0; i < hits; i++) {
+        if (!hitChance(P.acc)) { pushLog(`${move.name}: miss.`); continue; }
+        const crit = rollCrit(P.crit, move.crit || 0);
+        const def = Math.max(0, E.def * (1 - (E.shred || 0)));
+        const dmg = calcDmg(P.atk, def, move.mult || 1, crit);
+        E.hp = Math.max(0, E.hp - dmg); total += dmg;
+      }
+      if (move.shred) E.shred = Math.min(0.5, (E.shred || 0) + move.shred);
+      if (total) pushLog(`${move.name} deals ${total}.`);
+    } else if (move.kind === "heal") {
+      const heal = Math.round(P.maxHp * (move.heal || 0.15));
+      P.hp = Math.min(P.maxHp, P.hp + heal);
+      pushLog(`${move.name}: +${heal} HP.`);
+    } else if (move.kind === "defend+") {
+      P.defending = true; P.guardTurns = move.turns || 2;
+      pushLog(`${move.name}: guard up.`);
+    } else if (move.kind === "dot") {
+      P.dot = Math.round(P.atk * (move.mult || 0.4));
+      P.dotTurns = move.turns || 3;
+      pushLog(`${move.name}: burn applied.`);
+    } else if (move.kind === "cleanse") {
+      P.dot = 0; P.dotTurns = 0;
+      const heal = Math.round(P.maxHp * (move.heal || 0.1));
+      P.hp = Math.min(P.maxHp, P.hp + heal);
+      pushLog(`${move.name}: cleared +${heal} HP.`);
+    }
+  }
+  if (E.hp <= 0) { finishWin(); renderFight(); showQueue(); return; }
+  enemyTurn();
+  renderFight();
+  if (fight.over === "win") showQueue();
+}
+function hpBar(cur, max, cls) {
+  const pct = Math.max(0, Math.min(100, (cur / Math.max(1, max)) * 100));
+  return `<div class="bh-bar ${cls || ""}"><div class="bh-bar__fill" style="width:${pct.toFixed(1)}%"></div></div><div class="bh-nums">${Math.max(0, Math.round(cur))} / ${Math.round(max)}</div>`;
+}
+function renderFight() {
+  if (!fight) return go("/battle");
+  setTabs(null);
+  const P = fight.p, E = fight.e, moves = GM.battleMoves(S.game.skills);
+  const over = fight.over;
+  app.innerHTML = `<div class="top"><button class="iconbtn" id="bback" aria-label="Back">‹</button><h1 style="margin:0;font-size:20px">Rank Battle</h1></div>
+    <div class="battle-stage system-window">
+      <div class="battle-side enemy"><div class="battle-name">${h(fight.bossName)}</div>${hpBar(E.hp, E.maxHp, "enemy")}</div>
+      <div class="battle-side you"><div class="battle-name">${h(S.game.name || "Lifter")} · LV ${S.game.level}</div>${hpBar(P.hp, P.maxHp, "you")}
+        <div class="battle-stam">Stamina ${P.stam}/${P.stamMax}${P.guardTurns ? " · Guard" : ""}${P.defending ? " · Defend" : ""}</div></div>
+      <div class="battle-log" aria-live="polite">${fight.log.map(l => `<div>${h(l)}</div>`).join("")}</div>
+      ${over === "win" ? `<div class="stack"><button class="btn" id="bdone">Continue</button></div>`
+        : over === "lose" ? `<div class="stack"><button class="btn" id="bretry">Retry</button><button class="btn ghost" id="bdone">Back to list</button></div>`
+        : `<div class="battle-actions">
+            <button class="btn sm" data-act="attack">Attack</button>
+            <button class="btn sm ghost" data-act="defend">Defend</button>
+          </div>
+          <div class="battle-specials">${moves.map(m => `<button class="btn sm outline" data-move="${m.id}" ${P.stam < m.cost ? "disabled" : ""} title="${h(m.desc)}">${h(m.name)} · ${m.cost}</button>`).join("")}</div>
+          <p class="small muted center" style="margin:8px 0 0">Specials come from unlocked skills. Basics are always ready.</p>`}
+    </div>`;
+  $("#bback").onclick = () => { if (!over) confirmSheet("Leave battle?", "Progress in this fight is lost. Cleared bosses stay cleared.", "Leave", () => { fight = null; go("/battle"); }, true); else { fight = null; go("/battle"); } };
+  if ($("#bdone")) $("#bdone").onclick = () => { fight = null; go("/battle"); };
+  if ($("#bretry")) $("#bretry").onclick = () => { const b = GM.bossById(fight.bossId); startFight(b); renderFight(); };
+  app.querySelectorAll("[data-act]").forEach(b => b.onclick = () => resolvePlayerAction(b.dataset.act));
+  app.querySelectorAll("[data-move]").forEach(b => b.onclick = () => {
+    const mv = moves.find(m => m.id === b.dataset.move); if (mv) resolvePlayerAction("special", mv);
+  });
+}
+VIEWS.battle = () => {
+  ensureBattles(); setTabs("battle");
+  if (fight && !fight.over) return renderFight();
+  const G = S.game, list = GM.listBosses(G.level, G.battles.cleared);
+  const nextUnlock = list.find(b => !b.unlocked);
+  app.innerHTML = `${hudTop()}
+    <div class="system-window"><div class="system-window__title">Rank Battle</div>
+      <p class="sub">Turn-based forge fights. Stats from training power your combat. Specials unlock with skills.</p>
+      <p class="small muted center" style="margin:-8px 0 12px">Bosses open at Lv ${GM.BATTLE_FIRST_UNLOCK}, then every +${GM.BATTLE_UNLOCK_STEP}.${G.level < GM.BATTLE_FIRST_UNLOCK ? ` Reach Lv ${GM.BATTLE_FIRST_UNLOCK} to challenge the first.` : nextUnlock ? ` Next lock: Lv ${nextUnlock.unlock}.` : ""}</p>
+      ${list.length ? list.map(b => {
+        const state = b.cleared ? "cleared" : b.unlocked ? "open" : "locked";
+        const xpHint = b.cleared ? `Rematch +${b.xpRematch} XP` : b.unlocked ? `Clear +${b.xpClear} XP` : `Opens at Lv ${b.unlock}`;
+        return `<div class="battle-card ${state}"><div class="row between"><div><b>${h(b.name)}</b><div class="muted small">${h(b.blurb)}</div></div>
+          <span class="pill ${b.cleared ? "good" : b.unlocked ? "volt" : "locked"}">${b.cleared ? "Cleared" : b.unlocked ? "Open" : "Lv " + b.unlock}</span></div>
+          <div class="row between" style="margin-top:10px"><span class="muted small">HP ${b.hp} · ATK ${b.atk} · DEF ${b.def}</span><span class="muted small">${xpHint}</span></div>
+          ${b.unlocked ? `<button class="btn sm" style="width:100%;margin-top:10px" data-fight="${b.id}">${b.cleared ? "Rematch" : "Fight"}</button>` : ""}</div>`;
+      }).join("") : `<p class="center muted">No challengers listed yet.</p>`}
+    </div>`;
+  app.querySelectorAll("[data-fight]").forEach(b => b.onclick = () => {
+    const boss = GM.bossById(b.dataset.fight); if (!boss || G.level < boss.unlock) return toast("Still locked");
+    startFight(boss); go("/bfight/" + boss.id);
+  });
+};
+VIEWS.bfight = id => {
+  ensureBattles();
+  const boss = GM.bossById(id);
+  if (!boss || S.game.level < boss.unlock) return go("/battle");
+  if (!fight || fight.bossId !== id || fight.over) startFight(boss);
+  renderFight();
+};
+
 // ---------- Skill tree ----------
 VIEWS.skills = () => {
   setTabs("skills"); const G = S.game;
@@ -805,6 +1006,61 @@ VIEWS.settings = () => {
     localStorage.removeItem(KEY); S = fresh(); pend = {}; sessionSpent = {}; draft = null; planFilter = null; toast("Your data was deleted"); go("/welcome");
   }, true);
 };
+
+
+// ---------- Pull-to-refresh (standalone PWA + browser) ----------
+(function setupPullToRefresh() {
+  const THRESH = 72, MAX = 120;
+  let startY = 0, pulling = false, armed = false, refreshing = false, el = null;
+  const isScrollTop = () => (window.scrollY || document.documentElement.scrollTop || 0) <= 0;
+  const inTrain = () => location.hash.startsWith("#/train") || location.hash.startsWith("#/bfight");
+  function ensureEl() {
+    if (el) return el;
+    el = document.createElement("div");
+    el.id = "ptr"; el.className = "ptr"; el.setAttribute("aria-hidden", "true");
+    el.innerHTML = `<div class="ptr__inner"><i class="ptr__spin"></i><span class="ptr__label">Pull to refresh</span></div>`;
+    document.body.appendChild(el);
+    return el;
+  }
+  function setVisual(dy, release) {
+    const node = ensureEl();
+    const p = Math.min(1, dy / THRESH);
+    node.style.setProperty("--ptr", String(p));
+    node.classList.toggle("on", dy > 8 || refreshing);
+    node.classList.toggle("ready", dy >= THRESH && !refreshing);
+    node.classList.toggle("busy", refreshing);
+    const label = node.querySelector(".ptr__label");
+    if (label) label.textContent = refreshing ? "Refreshing…" : dy >= THRESH ? "Release to refresh" : "Pull to refresh";
+  }
+  function doRefresh() {
+    if (refreshing) return;
+    refreshing = true; setVisual(THRESH, true);
+    // Give the affordance a beat, then hard-reload so SW network-first navigations update.
+    setTimeout(() => { try { location.reload(); } catch (e) { location.href = location.href; } }, 280);
+  }
+  document.addEventListener("touchstart", e => {
+    if (refreshing || inTrain() || !isScrollTop()) { pulling = false; return; }
+    if (e.touches.length !== 1) return;
+    startY = e.touches[0].clientY; pulling = true; armed = false;
+  }, { passive: true });
+  document.addEventListener("touchmove", e => {
+    if (!pulling || refreshing || inTrain()) return;
+    if (!isScrollTop()) { pulling = false; setVisual(0); return; }
+    const dy = Math.max(0, Math.min(MAX, e.touches[0].clientY - startY));
+    if (dy > 8) { armed = true; setVisual(dy); }
+    // Prevent rubber-band only once we're clearly pulling to refresh
+    if (armed && dy > 12 && e.cancelable) e.preventDefault();
+  }, { passive: false });
+  document.addEventListener("touchend", () => {
+    if (!pulling) return;
+    const node = el;
+    const ready = node && node.classList.contains("ready");
+    pulling = false;
+    if (ready) doRefresh();
+    else setVisual(0);
+  }, { passive: true });
+  document.addEventListener("touchcancel", () => { pulling = false; if (!refreshing) setVisual(0); }, { passive: true });
+})();
 
 // ---------- Boot ----------
 if ("serviceWorker" in navigator) window.addEventListener("load", () => navigator.serviceWorker.register("sw.js", { scope: "/" }).catch(() => navigator.serviceWorker.register("sw.js").catch(() => {})));

@@ -17,6 +17,7 @@ const RANKS = [
   { k: "B", name: "Forged", level: 35, pro: true }, { k: "A", name: "Tempered", level: 55, pro: true }, { k: "S", name: "Legend", level: 80, pro: true }
 ];
 const xpToNext = L => Math.max(10, Math.round(60 * Math.pow(L, 1.5) / 10) * 10);   // 60 × L^1.5, rounded to 10
+const MAX_LEVEL = 9999;
 const LEVEL_POINTS = 5, LEVEL_ALL_STATS = 1, DAILY_POINTS = 3, SETS_PER_STAT = 10, CLASS_LEVEL = 25, START_SHIELDS = 1, MAX_SHIELDS = 3;
 const dailyClearXp = L => 10 * L;
 const dailyXpCap = dis => 800 + 20 * dis;     // sanity cap on workout XP per day
@@ -118,16 +119,16 @@ const SKILL_PLANS = [
 ];
 // Skill tree lines (node I is free; later nodes are Pro content, free during testing)
 const SKILLS = [
-  { id: "iron-core", line: "STR", node: "I", name: "Iron Core I", desc: "Adds the Core Forge plan (2 wks).", req: { level: 2, stat: { STR: 11 } } },
-  { id: "push-mastery", line: "STR", node: "II", pro: true, name: "Push Mastery", desc: "Adds Push Mastery and harder push-up variation tips during workouts.", req: { level: 6, stat: { STR: 16 } } },
-  { id: "loaded-carry", line: "STR", node: "III", pro: true, name: "Loaded Carry", desc: "Adds the Loaded Carry dumbbell plan.", req: { level: 15, stat: { STR: 30 }, equip: "dumbbells" } },
-  { id: "barbell-basics", line: "STR", node: "IV", pro: true, name: "Barbell Basics", desc: "Adds the Barbell Basics gym plan.", req: { level: 20, stat: { STR: 36 }, equip: "gym" } },
-  { id: "engine-room", line: "END", node: "I", name: "Engine Room", desc: "Adds 20-minute conditioning circuits.", req: { level: 3, stat: { END: 12 } } },
-  { id: "5k-builder", line: "END", node: "II", pro: true, name: "5K Builder", desc: "Adds a walk-run plan that builds to 5K.", req: { level: 10, stat: { END: 22 } } },
-  { id: "spring-step", line: "AGI", node: "I", name: "Spring Step", desc: "Adds plyometric basics.", req: { level: 4, stat: { AGI: 13 } } },
-  { id: "sprint-intervals", line: "AGI", node: "II", pro: true, name: "Sprint Intervals", desc: "Adds short sprint sessions.", req: { level: 12, stat: { AGI: 24 } } },
-  { id: "mobility-reset", line: "VIT", node: "I", name: "Mobility Reset", desc: "Adds short mobility flows.", req: { level: 2, stat: { VIT: 11 } } },
-  { id: "deload-week", line: "VIT", node: "II", pro: true, name: "Deload Week", desc: "Adds a lighter recovery week.", req: { level: 8, stat: { VIT: 18 } } },
+  { id: "iron-core", line: "STR", node: "I", name: "Iron Core I", desc: "Adds the Core Forge plan (2 wks). Rank Battle: Iron Guard.", req: { level: 2, stat: { STR: 11 } } },
+  { id: "push-mastery", line: "STR", node: "II", pro: true, name: "Push Mastery", desc: "Adds Push Mastery and harder push-up tips. Rank Battle: Crushing Blow.", req: { level: 6, stat: { STR: 16 } } },
+  { id: "loaded-carry", line: "STR", node: "III", pro: true, name: "Loaded Carry", desc: "Adds the Loaded Carry dumbbell plan. Rank Battle: Burden Slam.", req: { level: 15, stat: { STR: 30 }, equip: "dumbbells" } },
+  { id: "barbell-basics", line: "STR", node: "IV", pro: true, name: "Barbell Basics", desc: "Adds the Barbell Basics gym plan. Rank Battle: Bar Drop.", req: { level: 20, stat: { STR: 36 }, equip: "gym" } },
+  { id: "engine-room", line: "END", node: "I", name: "Engine Room", desc: "Adds 20-minute conditioning circuits. Rank Battle: Overheat Burst.", req: { level: 3, stat: { END: 12 } } },
+  { id: "5k-builder", line: "END", node: "II", pro: true, name: "5K Builder", desc: "Adds a walk-run plan that builds to 5K. Rank Battle: Steady Burn.", req: { level: 10, stat: { END: 22 } } },
+  { id: "spring-step", line: "AGI", node: "I", name: "Spring Step", desc: "Adds plyometric basics. Rank Battle: Spring Strike.", req: { level: 4, stat: { AGI: 13 } } },
+  { id: "sprint-intervals", line: "AGI", node: "II", pro: true, name: "Sprint Intervals", desc: "Adds short sprint sessions. Rank Battle: Blitz Dash.", req: { level: 12, stat: { AGI: 24 } } },
+  { id: "mobility-reset", line: "VIT", node: "I", name: "Mobility Reset", desc: "Adds short mobility flows. Rank Battle: Flow Mend.", req: { level: 2, stat: { VIT: 11 } } },
+  { id: "deload-week", line: "VIT", node: "II", pro: true, name: "Deload Week", desc: "Adds a lighter recovery week. Rank Battle: Soft Reset.", req: { level: 8, stat: { VIT: 18 } } },
   { id: "early-riser", line: "DIS", node: "I", name: "Title: Early Riser", title: "Early Riser", desc: "Title. +5% XP while equipped.", req: { stat: { DIS: 12 }, early: 3 } },
   { id: "week-warrior", line: "DIS", node: "II", name: "Title: Week Warrior", title: "Week Warrior", desc: "Title. +5% XP while equipped.", req: { streak: 7 } },
   { id: "streak-30", line: "DIS", node: "III", pro: true, name: "Title: 30-Day Streak", title: "30-Day Streak", desc: "Title. +5% XP while equipped.", req: { streak: 30, stat: { DIS: 20 } } }
@@ -148,7 +149,119 @@ function newGame() {
   return { level: 1, xp: 0, totalXp: 0, points: 0, stats: { STR: 10, END: 10, AGI: 10, VIT: 10, DIS: 10 }, trainSets: {}, totalSets: 0,
     skills: [], title: "Initiate", cls: null, classTrialDone: false, rankIdx: 0, achievements: {}, notified: [],
     daily: null, activeDays: {}, restDays: {}, dailies: 0, early: 0, streak: 0, lastActive: null, shields: START_SHIELDS, shieldVit: 1,
-    missNotice: null, queue: [], xpDay: { date: null, amt: 0 }, name: "" };
+    missNotice: null, queue: [], xpDay: { date: null, amt: 0 }, name: "",
+    battles: { cleared: {} } };
 }
-window.HG_GAME = { STATS, RANKS, xpToNext, LEVEL_POINTS, LEVEL_ALL_STATS, DAILY_POINTS, SETS_PER_STAT, CLASS_LEVEL, MAX_SHIELDS, dailyClearXp, dailyXpCap, CARDIO, statFor, setXp, dailyQuest, rankTrial, CLASS_TRIAL, CLASSES, SKILL_PLANS, SKILLS, VARIATIONS, ACH, newGame };
+
+// ---------- Rank Battle (turn-based forge bosses) ----------
+const BATTLE_FIRST_UNLOCK = 5, BATTLE_UNLOCK_STEP = 2, BATTLE_LIST_AHEAD = 20;
+const battleUnlockLevel = i => BATTLE_FIRST_UNLOCK + i * BATTLE_UNLOCK_STEP;
+// Hand-crafted openers (original forge / metal / beast names only)
+const BOSSES_HAND = [
+  { id: "ember-whelp", name: "Ember Whelp", blurb: "A coal-born hatchling with a hot temper.", hp: 90, atk: 12, def: 4 },
+  { id: "scrap-hound", name: "Scrap Hound", blurb: "Junkyard jaws. Packs a mean bite.", hp: 120, atk: 15, def: 6 },
+  { id: "cinder-boar", name: "Cinder Boar", blurb: "Tusks of cooled slag. Charges hard.", hp: 155, atk: 18, def: 8 },
+  { id: "anvil-beetle", name: "Anvil Beetle", blurb: "Shell like a workbench. Slow, stubborn.", hp: 200, atk: 16, def: 14 },
+  { id: "rust-serpent", name: "Rust Serpent", blurb: "Coils of oxidized cable and spite.", hp: 175, atk: 24, def: 9 },
+  { id: "coal-golem", name: "Coal Golem", blurb: "Walking furnace. Heavy fists.", hp: 260, atk: 22, def: 16 },
+  { id: "brass-lynx", name: "Brass Lynx", blurb: "Quick paws, polished claws.", hp: 190, atk: 30, def: 10 },
+  { id: "forge-drake", name: "Forge Drake", blurb: "Bellows breath and tempered scales.", hp: 320, atk: 28, def: 18 },
+  { id: "ironback", name: "Ironback Tortoise", blurb: "Plate shell. Hits like a drop-hammer.", hp: 380, atk: 26, def: 24 },
+  { id: "slag-wyrm", name: "Slag Wyrm", blurb: "Molten spit. Don't stand still.", hp: 340, atk: 36, def: 16 },
+  { id: "temper-sphinx", name: "Temper Sphinx", blurb: "Riddles in heat. Sharp mind, sharper bite.", hp: 420, atk: 34, def: 22 },
+  { id: "quench-leviathan", name: "Quench Leviathan", blurb: "Steam and steel from the cooling trough.", hp: 520, atk: 38, def: 28 }
+];
+const BOSS_PREFIX = ["Ember", "Slag", "Brass", "Iron", "Cinder", "Tempered", "Quench", "Ore", "Flux", "Spark", "Anvil", "Bellows", "Crucible", "Hammer", "Ingots", "Molten", "Rust", "Coal", "Forge", "Steel"];
+const BOSS_SUFFIX = ["Whelp", "Hound", "Boar", "Beetle", "Serpent", "Golem", "Lynx", "Drake", "Tortoise", "Wyrm", "Sphinx", "Leviathan", "Raven", "Mantis", "Ox", "Viper", "Crab", "Moth", "Stag", "Ape"];
+function _seed(n) { let x = (n * 1103515245 + 12345) >>> 0; return () => { x = (x * 1664525 + 1013904223) >>> 0; return x / 4294967296; }; }
+function makeBoss(i) {
+  const unlock = battleUnlockLevel(i);
+  if (i < BOSSES_HAND.length) {
+    const b = BOSSES_HAND[i];
+    return Object.assign({ unlock, idx: i, xpClear: 40 + unlock * 8, xpRematch: 12 + unlock * 2 }, b);
+  }
+  const rnd = _seed(i * 9973 + 17);
+  const name = BOSS_PREFIX[Math.floor(rnd() * BOSS_PREFIX.length)] + " " + BOSS_SUFFIX[Math.floor(rnd() * BOSS_SUFFIX.length)];
+  const tier = unlock;
+  const hp = Math.round(80 + tier * 16 + rnd() * tier * 4);
+  const atk = Math.round(10 + tier * 1.1 + rnd() * 6);
+  const def = Math.round(3 + tier * 0.7 + rnd() * 4);
+  const id = "forge-" + i;
+  return { id, name, blurb: "A forge-born challenger scaled to your climb.", hp, atk, def, unlock, idx: i, xpClear: 40 + unlock * 8, xpRematch: 12 + unlock * 2 };
+}
+function bossById(id) {
+  if (!id) return null;
+  const hand = BOSSES_HAND.findIndex(b => b.id === id);
+  if (hand >= 0) return makeBoss(hand);
+  const m = /^forge-(\d+)$/.exec(id);
+  if (m) return makeBoss(+m[1]);
+  return null;
+}
+function listBosses(level, cleared) {
+  cleared = cleared || {};
+  const out = [], seen = new Set();
+  // All cleared (by stored index or id)
+  const clearedIdx = Object.keys(cleared).map(id => {
+    const b = bossById(id); return b ? b.idx : -1;
+  }).filter(i => i >= 0);
+  const maxCleared = clearedIdx.length ? Math.max(...clearedIdx) : -1;
+  // How far the schedule has opened
+  let openCount = 0;
+  while (battleUnlockLevel(openCount) <= level) openCount++;
+  const aheadStart = Math.max(0, openCount);
+  const aheadEnd = aheadStart + BATTLE_LIST_AHEAD;
+  const from = 0;
+  const to = Math.max(maxCleared + 1, aheadEnd, BOSSES_HAND.length);
+  for (let i = from; i < to; i++) {
+    const b = makeBoss(i);
+    const unlocked = level >= b.unlock;
+    const isCleared = !!cleared[b.id];
+    // Keep list usable: include cleared, available, and next locked window
+    if (isCleared || unlocked || i < aheadEnd) {
+      if (!seen.has(b.id)) { seen.add(b.id); out.push(Object.assign({}, b, { unlocked, cleared: isCleared })); }
+    }
+  }
+  // Cap: all cleared + available + next BATTLE_LIST_AHEAD locked
+  const availOrCleared = out.filter(b => b.cleared || b.unlocked);
+  const locked = out.filter(b => !b.cleared && !b.unlocked).slice(0, BATTLE_LIST_AHEAD);
+  return availOrCleared.concat(locked).sort((a, b) => a.idx - b.idx);
+}
+// Base specials + skill-mapped Rank Battle moves
+const BATTLE_BASICS = [
+  { id: "temper-strike", name: "Temper Strike", cost: 1, kind: "dmg", mult: 1.35, desc: "A focused hit. No skill required." },
+  { id: "brace-pulse", name: "Brace Pulse", cost: 1, kind: "heal", heal: 0.18, desc: "Steady breath. Mend a little HP." }
+];
+const BATTLE_SKILL_MOVES = {
+  "iron-core": { id: "iron-guard", name: "Iron Guard", cost: 2, kind: "defend+", mult: 0.35, turns: 2, desc: "Core brace. Extra damage cut for 2 turns." },
+  "push-mastery": { id: "crushing-blow", name: "Crushing Blow", cost: 2, kind: "dmg", mult: 2.1, desc: "All power into one strike." },
+  "loaded-carry": { id: "burden-slam", name: "Burden Slam", cost: 2, kind: "dmg", mult: 1.7, shred: 0.15, desc: "Heavy slam. Softens enemy defense." },
+  "barbell-basics": { id: "bar-drop", name: "Bar Drop", cost: 3, kind: "dmg", mult: 2.4, desc: "Commit everything. Massive hit." },
+  "engine-room": { id: "overheat-burst", name: "Overheat Burst", cost: 2, kind: "multi", hits: 3, mult: 0.7, desc: "Three quick engine hits." },
+  "5k-builder": { id: "steady-burn", name: "Steady Burn", cost: 2, kind: "dot", turns: 3, mult: 0.45, desc: "Chip damage over 3 turns." },
+  "spring-step": { id: "spring-strike", name: "Spring Strike", cost: 2, kind: "dmg", mult: 1.5, crit: 0.5, desc: "Leap in. High crit chance." },
+  "sprint-intervals": { id: "blitz-dash", name: "Blitz Dash", cost: 2, kind: "multi", hits: 2, mult: 1.0, desc: "Two lightning strikes." },
+  "mobility-reset": { id: "flow-mend", name: "Flow Mend", cost: 2, kind: "heal", heal: 0.32, desc: "Mobility flow. Strong mend." },
+  "deload-week": { id: "soft-reset", name: "Soft Reset", cost: 1, kind: "cleanse", heal: 0.12, desc: "Clear your burn and mend lightly." }
+};
+function battleMoves(skillIds) {
+  const out = BATTLE_BASICS.slice();
+  const set = new Set(skillIds || []);
+  for (const [sk, mv] of Object.entries(BATTLE_SKILL_MOVES)) if (set.has(sk)) out.push(mv);
+  return out;
+}
+function battlePlayerStats(stats) {
+  const s = stats || {};
+  const STR = s.STR || 10, END = s.END || 10, AGI = s.AGI || 10, VIT = s.VIT || 10, DIS = s.DIS || 10;
+  return {
+    maxHp: Math.round(70 + VIT * 9),
+    atk: Math.round(6 + STR * 1.4),
+    def: Math.round(3 + END * 0.55 + VIT * 0.25),
+    crit: Math.min(0.45, 0.05 + AGI * 0.006),
+    acc: Math.min(0.98, 0.78 + DIS * 0.004),
+    resist: Math.min(0.35, DIS * 0.004),
+    staminaMax: Math.max(3, 2 + Math.floor(END / 8))
+  };
+}
+
+window.HG_GAME = { STATS, RANKS, xpToNext, MAX_LEVEL, LEVEL_POINTS, LEVEL_ALL_STATS, DAILY_POINTS, SETS_PER_STAT, CLASS_LEVEL, MAX_SHIELDS, dailyClearXp, dailyXpCap, CARDIO, statFor, setXp, dailyQuest, rankTrial, CLASS_TRIAL, CLASSES, SKILL_PLANS, SKILLS, VARIATIONS, ACH, newGame, BATTLE_FIRST_UNLOCK, BATTLE_UNLOCK_STEP, BATTLE_LIST_AHEAD, battleUnlockLevel, BOSSES_HAND, makeBoss, bossById, listBosses, BATTLE_BASICS, BATTLE_SKILL_MOVES, battleMoves, battlePlayerStats };
 })();
