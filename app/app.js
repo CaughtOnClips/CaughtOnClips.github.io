@@ -798,8 +798,8 @@ function applyEnemyDmg(amt) {
 function clearAnim() { if (fight) { fight.anim = null; fight.animFlash = null; } }
 function setAnim(kind, flash) { if (fight) { fight.anim = kind; fight.animFlash = flash || null; } }
 const FIGHT_CLIP_MAX_MS = 9000;
-/** Play the clash video from the start; resolves on ended or timeout. Call play on the same user tap for iOS. */
-function playFightClip() {
+/** Play the command-mapped fight clip; resolves on ended or timeout. Call play on the same user tap for iOS. */
+function playFightClip(clipKey) {
   return new Promise(resolve => {
     const v = document.getElementById("ff-clash");
     let done = false;
@@ -816,9 +816,18 @@ function playFightClip() {
     const onEnded = () => finish();
     const tid = setTimeout(finish, FIGHT_CLIP_MAX_MS);
     if (!v) { finish(); return; }
-    v.addEventListener("ended", onEnded);
+    const info = (GM.battleVideoFor && GM.battleVideoFor(clipKey)) || { src: "battle/fight-clash.mp4", poster: "battle/fight-clash-poster.jpg" };
+    const key = clipKey || "idle";
     try {
-      try { v.currentTime = 0; } catch (_) {}
+      if (v.dataset.clip !== key || !v.getAttribute("src") || !v.src.includes(info.src.split("/").pop())) {
+        v.dataset.clip = key;
+        if (info.poster) v.setAttribute("poster", info.poster);
+        v.src = info.src;
+        v.load();
+      } else {
+        try { v.currentTime = 0; } catch (_) {}
+      }
+      v.addEventListener("ended", onEnded);
       const p = v.play();
       if (p && typeof p.then === "function") p.catch(() => finish());
     } catch (_) { finish(); }
@@ -956,8 +965,8 @@ function applyPlayerAction(act, move) {
 }
 function runEnemyPhase() {
   if (!fight || fight.over) { if (fight) { clearAnim(); fight.busy = false; renderFight(); } return; }
-  // Replay clash video for the enemy turn, then resolve damage
-  playFightClip().then(() => {
+  // Enemy-turn FX clip, then resolve damage
+  playFightClip("enemy").then(() => {
     if (!fight) return;
     if (fight.over) { fight.busy = false; clearAnim(); renderFight(); return; }
     enemyTurn();
@@ -973,8 +982,9 @@ function resolvePlayerAction(act, move) {
   if (act === "special" && move && fight.p.stam < move.cost) { toast("Not enough stamina"); return; }
   fight.busy = true;
   renderFight(); // disable buttons; keep video stage visible
-  // Start clip on the same user tap (iOS muted autoplay unlock)
-  playFightClip().then(() => {
+  // Start command-mapped clip on the same user tap (iOS muted autoplay unlock)
+  const clipKey = act === "special" && move ? move.id : act;
+  playFightClip(clipKey).then(() => {
     if (!fight) return;
     const result = applyPlayerAction(act, move);
     if (!result) { clearAnim(); fight.busy = false; renderFight(); return; }
