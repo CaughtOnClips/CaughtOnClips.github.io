@@ -258,28 +258,6 @@ function battleMoves(skillIds) {
   for (const [sk, mv] of Object.entries(BATTLE_SKILL_MOVES)) if (set.has(sk)) out.push(mv);
   return out;
 }
-const BATTLE_VIDEOS = {
-  attack: { src: "battle/fx/attack.mp4", poster: "battle/fx/attack-poster.jpg" },
-  defend: { src: "battle/fx/defend.mp4", poster: "battle/fx/defend-poster.jpg" },
-  "temper-strike": { src: "battle/fx/temper.mp4", poster: "battle/fx/temper-poster.jpg" },
-  "brace-pulse": { src: "battle/fx/heal.mp4", poster: "battle/fx/heal-poster.jpg" },
-  "flow-mend": { src: "battle/fx/heal.mp4", poster: "battle/fx/heal-poster.jpg" },
-  "soft-reset": { src: "battle/fx/heal.mp4", poster: "battle/fx/heal-poster.jpg" },
-  "overheat-burst": { src: "battle/fx/multi.mp4", poster: "battle/fx/multi-poster.jpg" },
-  "blitz-dash": { src: "battle/fx/multi.mp4", poster: "battle/fx/multi-poster.jpg" },
-  "spring-strike": { src: "battle/fx/spring.mp4", poster: "battle/fx/spring-poster.jpg" },
-  "iron-guard": { src: "battle/fx/defend.mp4", poster: "battle/fx/defend-poster.jpg" },
-  "crushing-blow": { src: "battle/fx/special.mp4", poster: "battle/fx/special-poster.jpg" },
-  "burden-slam": { src: "battle/fx/special.mp4", poster: "battle/fx/special-poster.jpg" },
-  "bar-drop": { src: "battle/fx/special.mp4", poster: "battle/fx/special-poster.jpg" },
-  "steady-burn": { src: "battle/fx/special.mp4", poster: "battle/fx/special-poster.jpg" },
-  enemy: { src: "battle/fx/enemy.mp4", poster: "battle/fx/enemy-poster.jpg" },
-  idle: { src: "battle/fight-clash.mp4", poster: "battle/fight-clash-poster.jpg" },
-  fallback: { src: "battle/fx/special.mp4", poster: "battle/fx/special-poster.jpg" }
-};
-function battleVideoFor(key) {
-  return BATTLE_VIDEOS[key] || BATTLE_VIDEOS.fallback;
-}
 function battlePlayerStats(stats) {
   const s = stats || {};
   const STR = s.STR || 10, END = s.END || 10, AGI = s.AGI || 10, VIT = s.VIT || 10, DIS = s.DIS || 10;
@@ -294,5 +272,5 @@ function battlePlayerStats(stats) {
   };
 }
 
-window.HG_GAME = { STATS, RANKS, xpToNext, MAX_LEVEL, LEVEL_POINTS, LEVEL_ALL_STATS, DAILY_POINTS, SETS_PER_STAT, CLASS_LEVEL, MAX_SHIELDS, dailyClearXp, dailyXpCap, CARDIO, statFor, setXp, dailyQuest, rankTrial, CLASS_TRIAL, CLASSES, SKILL_PLANS, SKILLS, VARIATIONS, ACH, newGame, BATTLE_FIRST_UNLOCK, BATTLE_UNLOCK_STEP, BATTLE_LIST_AHEAD, battleUnlockLevel, BOSSES_HAND, HERO_ART, HERO_BATTLE_ART, HERO_SHOWCASE_ART, BOSS_ART_FALLBACK, makeBoss, bossById, listBosses, BATTLE_BASICS, BATTLE_SKILL_MOVES, battleMoves, battlePlayerStats, BATTLE_VIDEOS, battleVideoFor };
+window.HG_GAME = { STATS, RANKS, xpToNext, MAX_LEVEL, LEVEL_POINTS, LEVEL_ALL_STATS, DAILY_POINTS, SETS_PER_STAT, CLASS_LEVEL, MAX_SHIELDS, dailyClearXp, dailyXpCap, CARDIO, statFor, setXp, dailyQuest, rankTrial, CLASS_TRIAL, CLASSES, SKILL_PLANS, SKILLS, VARIATIONS, ACH, newGame, BATTLE_FIRST_UNLOCK, BATTLE_UNLOCK_STEP, BATTLE_LIST_AHEAD, battleUnlockLevel, BOSSES_HAND, HERO_ART, HERO_BATTLE_ART, HERO_SHOWCASE_ART, BOSS_ART_FALLBACK, makeBoss, bossById, listBosses, BATTLE_BASICS, BATTLE_SKILL_MOVES, battleMoves, battlePlayerStats };
 })();

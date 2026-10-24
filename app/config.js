@@ -10,5 +10,5 @@ window.HG_CONFIG = {
   PRIVACY_URL: "/privacy.html",
   SUPPORT_URL: "/support.html",
   SUPPORT_EMAIL: "vegavisionvante@gmail.com",
-  VERSION: "0.1.7-beta"
+  VERSION: "0.1.8-beta"
 };
