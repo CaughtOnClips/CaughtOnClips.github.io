@@ -154,7 +154,7 @@ function newGame() {
 }
 
 // ---------- Rank Battle (turn-based forge bosses) ----------
-const BATTLE_FIRST_UNLOCK = 5, BATTLE_UNLOCK_STEP = 2, BATTLE_LIST_AHEAD = 20;
+const BATTLE_FIRST_UNLOCK = 3, BATTLE_UNLOCK_STEP = 2, BATTLE_LIST_AHEAD = 20;
 const battleUnlockLevel = i => BATTLE_FIRST_UNLOCK + i * BATTLE_UNLOCK_STEP;
 // Hand-crafted openers (original forge / metal / beast names only)
 const BOSSES_HAND = [
