@@ -160,20 +160,20 @@ const battleUnlockLevel = i => BATTLE_FIRST_UNLOCK + i * BATTLE_UNLOCK_STEP;
 const BOSSES_HAND = [
   // Stats raised ~40–55% vs early drafts so Defend + specials matter. Humans mid-list.
   // ATK pass (v0.1.10): ~1.9x boss ATK so counterattacks hurt (Ember ~18–28 vs early def).
-  { id: "ember-whelp", name: "Ember Whelp", blurb: "A coal-born hatchling with a hot temper.", hp: 130, atk: 32, def: 6, art: "battle/bosses/ember-whelp.jpg" },
-  { id: "scrap-hound", name: "Scrap Hound", blurb: "Junkyard jaws. Packs a mean bite.", hp: 175, atk: 42, def: 9, art: "battle/bosses/scrap-hound.jpg" },
-  { id: "cinder-boar", name: "Cinder Boar", blurb: "Tusks of cooled slag. Charges hard.", hp: 230, atk: 50, def: 12, art: "battle/bosses/cinder-boar.jpg" },
-  { id: "anvil-beetle", name: "Anvil Beetle", blurb: "Shell like a workbench. Slow, stubborn.", hp: 300, atk: 46, def: 21, art: "battle/bosses/anvil-beetle.jpg" },
-  { id: "iron-warden", name: "Iron Warden", blurb: "Human rival. Plate greaves and a cold stare.", hp: 280, atk: 55, def: 16, art: "battle/bosses/iron-warden.jpg", human: true },
-  { id: "rust-serpent", name: "Rust Serpent", blurb: "Coils of oxidized cable and spite.", hp: 265, atk: 65, def: 14, art: "battle/bosses/rust-serpent.jpg" },
-  { id: "coal-golem", name: "Coal Golem", blurb: "Walking furnace. Heavy fists.", hp: 390, atk: 60, def: 25, art: "battle/bosses/coal-golem.jpg" },
-  { id: "brass-lynx", name: "Brass Lynx", blurb: "Quick paws, polished claws.", hp: 285, atk: 78, def: 15, art: "battle/bosses/brass-lynx.jpg" },
-  { id: "slag-pugilist", name: "Slag Pugilist", blurb: "Human rival. Forge-scarred fists, no mercy.", hp: 340, atk: 75, def: 18, art: "battle/bosses/slag-pugilist.jpg", human: true },
-  { id: "forge-drake", name: "Forge Drake", blurb: "Bellows breath and tempered scales.", hp: 490, atk: 78, def: 28, art: "battle/bosses/forge-drake.jpg" },
-  { id: "ironback", name: "Ironback Tortoise", blurb: "Plate shell. Hits like a drop-hammer.", hp: 580, atk: 72, def: 37, art: "battle/bosses/ironback.jpg" },
-  { id: "slag-wyrm", name: "Slag Wyrm", blurb: "Molten spit. Don't stand still.", hp: 520, atk: 95, def: 25, art: "battle/bosses/slag-wyrm.jpg" },
-  { id: "temper-sphinx", name: "Temper Sphinx", blurb: "Riddles in heat. Sharp mind, sharper bite.", hp: 650, atk: 90, def: 34, art: "battle/bosses/temper-sphinx.jpg" },
-  { id: "quench-leviathan", name: "Quench Leviathan", blurb: "Steam and steel from the cooling trough.", hp: 820, atk: 105, def: 44, art: "battle/bosses/quench-leviathan.jpg" }
+  { id: "ember-whelp", name: "Ember Whelp", blurb: "A coal-born hatchling with a hot temper.", hp: 130, atk: 55, def: 6, art: "battle/bosses/ember-whelp.jpg" },
+  { id: "scrap-hound", name: "Scrap Hound", blurb: "Junkyard jaws. Packs a mean bite.", hp: 175, atk: 70, def: 9, art: "battle/bosses/scrap-hound.jpg" },
+  { id: "cinder-boar", name: "Cinder Boar", blurb: "Tusks of cooled slag. Charges hard.", hp: 230, atk: 85, def: 12, art: "battle/bosses/cinder-boar.jpg" },
+  { id: "anvil-beetle", name: "Anvil Beetle", blurb: "Shell like a workbench. Slow, stubborn.", hp: 300, atk: 78, def: 21, art: "battle/bosses/anvil-beetle.jpg" },
+  { id: "iron-warden", name: "Iron Warden", blurb: "Human rival. Plate greaves and a cold stare.", hp: 280, atk: 92, def: 16, art: "battle/bosses/iron-warden.jpg", human: true },
+  { id: "rust-serpent", name: "Rust Serpent", blurb: "Coils of oxidized cable and spite.", hp: 265, atk: 110, def: 14, art: "battle/bosses/rust-serpent.jpg" },
+  { id: "coal-golem", name: "Coal Golem", blurb: "Walking furnace. Heavy fists.", hp: 390, atk: 100, def: 25, art: "battle/bosses/coal-golem.jpg" },
+  { id: "brass-lynx", name: "Brass Lynx", blurb: "Quick paws, polished claws.", hp: 285, atk: 130, def: 15, art: "battle/bosses/brass-lynx.jpg" },
+  { id: "slag-pugilist", name: "Slag Pugilist", blurb: "Human rival. Forge-scarred fists, no mercy.", hp: 340, atk: 125, def: 18, art: "battle/bosses/slag-pugilist.jpg", human: true },
+  { id: "forge-drake", name: "Forge Drake", blurb: "Bellows breath and tempered scales.", hp: 490, atk: 130, def: 28, art: "battle/bosses/forge-drake.jpg" },
+  { id: "ironback", name: "Ironback Tortoise", blurb: "Plate shell. Hits like a drop-hammer.", hp: 580, atk: 120, def: 37, art: "battle/bosses/ironback.jpg" },
+  { id: "slag-wyrm", name: "Slag Wyrm", blurb: "Molten spit. Don't stand still.", hp: 520, atk: 160, def: 25, art: "battle/bosses/slag-wyrm.jpg" },
+  { id: "temper-sphinx", name: "Temper Sphinx", blurb: "Riddles in heat. Sharp mind, sharper bite.", hp: 650, atk: 150, def: 34, art: "battle/bosses/temper-sphinx.jpg" },
+  { id: "quench-leviathan", name: "Quench Leviathan", blurb: "Steam and steel from the cooling trough.", hp: 820, atk: 175, def: 44, art: "battle/bosses/quench-leviathan.jpg" }
 ];
 const HERO_SHOWCASE_ART = "battle/hero.jpg";
 const HERO_BATTLE_ART = "battle/hero-pixel.jpg";
@@ -193,7 +193,7 @@ function makeBoss(i) {
   const tier = unlock;
   // ~45% harder than the original procedural curve
   const hp = Math.round(115 + tier * 24 + rnd() * tier * 6);
-  const atk = Math.round(28 + tier * 2.8 + rnd() * 10);
+  const atk = Math.round(48 + tier * 4.2 + rnd() * 12);
   const def = Math.round(5 + tier * 1.05 + rnd() * 5);
   const id = "forge-" + i;
   const art = BOSS_ART_FALLBACK[i % BOSS_ART_FALLBACK.length];

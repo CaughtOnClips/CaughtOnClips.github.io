@@ -847,12 +847,12 @@ function enemyTurn() {
     fight.spamAtks = 0;
     return { kind: "e-defend" };
   }
-  if (!punish && roll < 0.18) {
+  if (!punish && roll < 0.10) {
     E.defending = true;
     pushLog(`${fight.bossName} raises a guard.`);
     return { kind: "e-defend" };
   }
-  const heavy = punish || Math.random() < 0.28;
+  const heavy = punish || Math.random() < 0.38;
   const mult = punish ? 1.55 : heavy ? 1.4 : 1;
   if (!hitChance(0.88)) {
     pushLog(`${fight.bossName} misses.`);
