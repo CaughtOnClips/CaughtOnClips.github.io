@@ -150,6 +150,7 @@ function newGame() {
     skills: [], title: "Initiate", cls: null, classTrialDone: false, rankIdx: 0, achievements: {}, notified: [],
     daily: null, activeDays: {}, restDays: {}, dailies: 0, early: 0, streak: 0, lastActive: null, shields: START_SHIELDS, shieldVit: 1,
     missNotice: null, queue: [], xpDay: { date: null, amt: 0 }, name: "",
+    heroId: "twist",
     battles: { cleared: {} } };
 }
 
@@ -175,9 +176,19 @@ const BOSSES_HAND = [
   { id: "temper-sphinx", name: "Temper Sphinx", blurb: "Riddles in heat. Sharp mind, sharper bite.", hp: 650, atk: 150, def: 34, art: "battle/bosses/temper-sphinx.jpg" },
   { id: "quench-leviathan", name: "Quench Leviathan", blurb: "Steam and steel from the cooling trough.", hp: 820, atk: 175, def: 44, art: "battle/bosses/quench-leviathan.jpg" }
 ];
-const HERO_SHOWCASE_ART = "battle/hero.jpg";
-const HERO_BATTLE_ART = "battle/hero-pixel.jpg";
+const HEROES = [
+  { id: "twist", name: "Vega", blurb: "Twist-forged striker. Default forge hero.", log: "battle/chars/twist-log.jpg", pixel: "battle/chars/twist-pixel.jpg" },
+  { id: "pink", name: "Ember", blurb: "Hot-tempered ember fighter.", log: "battle/chars/pink-log.jpg", pixel: "battle/chars/pink-pixel.jpg" },
+  { id: "blue", name: "Flux", blurb: "Cool flux runner. Precision hits.", log: "battle/chars/blue-log.jpg", pixel: "battle/chars/blue-pixel.jpg" },
+  { id: "green", name: "Quench", blurb: "Tempered quench tank. Steady power.", log: "battle/chars/green-log.jpg", pixel: "battle/chars/green-pixel.jpg" }
+];
+const HERO_SHOWCASE_ART = "battle/hero.jpg"; // twist fallback / legacy
+const HERO_BATTLE_ART = "battle/hero-pixel.jpg"; // twist fallback / legacy
 const HERO_ART = HERO_SHOWCASE_ART; // status thumb / legacy
+function heroById(id) { return HEROES.find(h => h.id === id) || HEROES[0]; }
+function activeHero(game) { return heroById((game && game.heroId) || "twist"); }
+function heroLogArt(game) { const h = activeHero(game); return (h && h.log) || HERO_SHOWCASE_ART; }
+function heroBattleArt(game) { const h = activeHero(game); return (h && h.pixel) || HERO_BATTLE_ART; }
 const BOSS_ART_FALLBACK = ["battle/bosses/ember-whelp.jpg", "battle/bosses/scrap-hound.jpg", "battle/bosses/cinder-boar.jpg", "battle/bosses/coal-golem.jpg", "battle/bosses/forge-drake.jpg", "battle/bosses/slag-wyrm.jpg"];
 const BOSS_PREFIX = ["Ember", "Slag", "Brass", "Iron", "Cinder", "Tempered", "Quench", "Ore", "Flux", "Spark", "Anvil", "Bellows", "Crucible", "Hammer", "Ingots", "Molten", "Rust", "Coal", "Forge", "Steel"];
 const BOSS_SUFFIX = ["Whelp", "Hound", "Boar", "Beetle", "Serpent", "Golem", "Lynx", "Drake", "Tortoise", "Wyrm", "Sphinx", "Leviathan", "Raven", "Mantis", "Ox", "Viper", "Crab", "Moth", "Stag", "Ape"];
@@ -296,5 +307,5 @@ function battlePlayerStats(stats) {
   };
 }
 
-window.HG_GAME = { STATS, RANKS, xpToNext, MAX_LEVEL, LEVEL_POINTS, LEVEL_ALL_STATS, DAILY_POINTS, SETS_PER_STAT, CLASS_LEVEL, MAX_SHIELDS, dailyClearXp, dailyXpCap, CARDIO, statFor, setXp, dailyQuest, rankTrial, CLASS_TRIAL, CLASSES, SKILL_PLANS, SKILLS, VARIATIONS, ACH, newGame, BATTLE_FIRST_UNLOCK, BATTLE_UNLOCK_STEP, BATTLE_LIST_AHEAD, battleUnlockLevel, BOSSES_HAND, HERO_ART, HERO_BATTLE_ART, HERO_SHOWCASE_ART, BOSS_ART_FALLBACK, makeBoss, bossById, listBosses, BATTLE_BASICS, BATTLE_SKILL_MOVES, battleMoves, battlePlayerStats, BATTLE_VIDEOS, battleVideoFor };
+window.HG_GAME = { STATS, RANKS, xpToNext, MAX_LEVEL, LEVEL_POINTS, LEVEL_ALL_STATS, DAILY_POINTS, SETS_PER_STAT, CLASS_LEVEL, MAX_SHIELDS, dailyClearXp, dailyXpCap, CARDIO, statFor, setXp, dailyQuest, rankTrial, CLASS_TRIAL, CLASSES, SKILL_PLANS, SKILLS, VARIATIONS, ACH, newGame, BATTLE_FIRST_UNLOCK, BATTLE_UNLOCK_STEP, BATTLE_LIST_AHEAD, battleUnlockLevel, BOSSES_HAND, HEROES, heroById, activeHero, heroLogArt, heroBattleArt, HERO_ART, HERO_BATTLE_ART, HERO_SHOWCASE_ART, BOSS_ART_FALLBACK, makeBoss, bossById, listBosses, BATTLE_BASICS, BATTLE_SKILL_MOVES, battleMoves, battlePlayerStats, BATTLE_VIDEOS, battleVideoFor };
 })();

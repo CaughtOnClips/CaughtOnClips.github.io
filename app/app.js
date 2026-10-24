@@ -14,7 +14,7 @@ const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 
 const GM = window.HG_GAME;
 const fresh = () => ({ profile: { goal: null, level: null, equip: null, units: "lb", agreedAt: null }, history: [], routines: [], activePlanId: null, active: null, lastWeights: {}, game: GM.newGame() });
 let S = load();
-function load() { try { const d = JSON.parse(localStorage.getItem(KEY)); if (!d) return fresh(); const f = fresh(); const g = Object.assign(f.game, d.game, { stats: Object.assign(f.game.stats, d.game && d.game.stats), battles: Object.assign({ cleared: {} }, f.game.battles, d.game && d.game.battles, { cleared: Object.assign({}, (f.game.battles && f.game.battles.cleared) || {}, (d.game && d.game.battles && d.game.battles.cleared) || {}) }) }); return Object.assign(f, d, { profile: Object.assign(f.profile, d.profile), game: g }); } catch (e) { return fresh(); } }
+function load() { try { const d = JSON.parse(localStorage.getItem(KEY)); if (!d) return fresh(); const f = fresh(); const g = Object.assign(f.game, d.game, { stats: Object.assign(f.game.stats, d.game && d.game.stats), battles: Object.assign({ cleared: {} }, f.game.battles, d.game && d.game.battles, { cleared: Object.assign({}, (f.game.battles && f.game.battles.cleared) || {}, (d.game && d.game.battles && d.game.battles.cleared) || {}) }), heroId: (d.game && d.game.heroId) || f.game.heroId || "twist" }); return Object.assign(f, d, { profile: Object.assign(f.profile, d.profile), game: g }); } catch (e) { return fresh(); } }
 function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { toast("Couldn't save. Storage may be full."); } }
 const onboarded = () => !!S.profile.agreedAt;
 
@@ -356,7 +356,7 @@ function statusWindow() {
   const G = S.game, r = curRank(), need = GM.xpToNext(G.level), nr = nextRank();
   const used = Object.values(pend).reduce((a, b) => a + b, 0), left = G.points - used, spent = Object.values(sessionSpent).reduce((a, b) => a + b, 0);
   return `<div class="system-window" id="status"><div class="system-window__title">Status</div>
-    <div class="head"><img class="hero-status-art" src="${GM.HERO_ART}" alt="" width="56" height="56" decoding="async"><span class="rank-badge" data-rank="${r.k}" aria-label="Rank ${r.k} ${r.name}">${r.k}</span><div><b>${h(G.name || "Lifter")} · LV ${G.level}</b><small>Rank ${r.k} · ${r.name} · streak ${G.streak} day${G.streak === 1 ? "" : "s"}</small><small>${h(G.cls ? GM.CLASSES.find(c => c.id === G.cls).name : "No class")} · ${h(G.title)} · 🛡 ${G.shields}</small></div></div>
+    <div class="head"><img class="hero-status-art" src="${(GM.heroLogArt && GM.heroLogArt(S.game)) || GM.HERO_ART}" alt="" width="56" height="56" decoding="async"><span class="rank-badge" data-rank="${r.k}" aria-label="Rank ${r.k} ${r.name}">${r.k}</span><div><b>${h(G.name || "Lifter")} · LV ${G.level}</b><small>Rank ${r.k} · ${r.name} · streak ${G.streak} day${G.streak === 1 ? "" : "s"}</small><small>${h(G.cls ? GM.CLASSES.find(c => c.id === G.cls).name : "No class")} · ${h(G.title)} · 🛡 ${G.shields}</small></div></div>
     <div class="xp-bar" role="progressbar" aria-label="XP" aria-valuemin="0" aria-valuemax="${need}" aria-valuenow="${G.xp}"><div class="xp-bar__fill" style="--xp:${(G.xp / need * 100).toFixed(1)}%"></div></div>
     <div class="xpline"><span>${G.xp.toLocaleString()} / ${need.toLocaleString()} XP</span><span>${G.level >= GM.MAX_LEVEL ? "Max level" : nr ? (G.level >= nr.level ? `<a href="#/quests">Rank Trial ${nr.k} open ›</a>` : `Rank ${nr.k} at Lv ${nr.level}`) : "Max rank"}</span></div>
     <div class="pts"><span>Attribute points</span><b id="pts">${left}</b></div>
@@ -596,15 +596,27 @@ VIEWS.summary = () => {
 VIEWS.history = () => {
   setTabs("history"); const st = stats();
   const G = S.game, r = curRank();
+  const hero = (GM.activeHero && GM.activeHero(G)) || { id: "twist", name: "Vega" };
+  const logArt = (GM.heroLogArt && GM.heroLogArt(G)) || GM.HERO_SHOWCASE_ART || GM.HERO_ART;
+  const heroes = GM.HEROES || [];
   app.innerHTML = `${hudTop()}
     <div class="system-window log-hero">
       <div class="log-hero__frame">
-        <img class="log-hero__art" src="${GM.HERO_SHOWCASE_ART || GM.HERO_ART}" alt="Hardgrain main character" width="390" height="520" decoding="async">
+        <img class="log-hero__art" src="${logArt}" alt="${h(hero.name)}" width="390" height="520" decoding="async">
         <div class="log-hero__fade"></div>
         <div class="log-hero__meta">
           <div class="log-hero__kicker">Appearance</div>
           <b>${h(G.name || "Lifter")}</b>
-          <small>LV ${G.level} · Rank ${r.k} ${r.name} · ${h(G.title)}</small>
+          <small>Fighter · ${h(hero.name)} · LV ${G.level} · Rank ${r.k} ${r.name} · ${h(G.title)}</small>
+        </div>
+      </div>
+      <div class="hero-pick" role="listbox" aria-label="Choose fighter">
+        <div class="hero-pick__label">Choose fighter</div>
+        <div class="hero-pick__grid">
+          ${heroes.map(hh => `<button type="button" class="hero-pick__cell${hh.id === hero.id ? " is-selected" : ""}" data-hero="${hh.id}" role="option" aria-selected="${hh.id === hero.id ? "true" : "false"}" title="${h(hh.name)}">
+            <img src="${hh.log}" alt="${h(hh.name)}" width="72" height="96" decoding="async">
+            <span>${h(hh.name)}</span>
+          </button>`).join("")}
         </div>
       </div>
     </div>
@@ -615,6 +627,13 @@ VIEWS.history = () => {
     <h2 style="margin-top:20px">Past workouts</h2>
     ${S.history.length ? S.history.map(x => `<a class="card" href="#/session/${x.id}"><div class="row between"><b>${h(x.title)}</b><span class="muted small">${fmtDate(x.date)}</span></div><div class="muted small">${fmtTime(x.durationSec)} · ${x.setsDone} sets${x.volume ? " · " + x.volume.toLocaleString() + " " + x.units : ""}</div></a>`).join("")
       : `<div class="card center"><p class="muted">No workouts yet. Your first one will show up here.</p><a class="btn" href="#/home">Start a workout</a></div>`}`;
+  app.querySelectorAll("[data-hero]").forEach(btn => btn.onclick = () => {
+    const id = btn.dataset.hero;
+    if (!id || id === S.game.heroId) return;
+    S.game.heroId = id;
+    save();
+    VIEWS.history();
+  });
 };
 function weekStrip() {
   const days = new Set(S.history.map(x => dayKey(x.date))); const out = [];
@@ -965,26 +984,36 @@ function applyPlayerAction(act, move) {
 }
 function runEnemyPhase() {
   if (!fight || fight.over) { if (fight) { clearAnim(); fight.busy = false; renderFight(); } return; }
-  // Enemy-turn FX clip, then resolve damage
+  // Sprite wind-up + keep clip timing for pacing (video hidden behind sprites)
+  setAnim("e-windup", null);
+  renderFight();
   playFightClip("enemy").then(() => {
     if (!fight) return;
     if (fight.over) { fight.busy = false; clearAnim(); renderFight(); return; }
-    enemyTurn();
+    const er = enemyTurn();
     tickAfterEnemy();
-    clearAnim();
-    fight.busy = false;
+    if (er.kind === "e-defend") setAnim("e-defend", null);
+    else if (er.kind === "e-miss") setAnim("e-miss", null);
+    else setAnim("e-attack", null);
     renderFight();
-    if (fight.over === "win") showQueue();
+    setTimeout(() => {
+      if (!fight) return;
+      clearAnim();
+      fight.busy = false;
+      renderFight();
+      if (fight.over === "win") showQueue();
+    }, 420);
   });
 }
 function resolvePlayerAction(act, move) {
   if (!fight || fight.over || fight.busy) return;
   if (act === "special" && move && fight.p.stam < move.cost) { toast("Not enough stamina"); return; }
   fight.busy = true;
-  renderFight(); // disable buttons; keep video stage visible
-  // Start command-mapped clip on the same user tap (iOS muted autoplay unlock)
+  // Preview clash pose on sprites while clip runs for timing
+  let preview = act === "defend" ? "defend" : (act === "special" ? "special" : "attack");
+  setAnim(preview, act === "special" && move ? (move.kind === "heal" || move.kind === "cleanse" ? "heal" : move.kind === "defend+" ? "guard" : move.kind === "dot" ? "burn" : move.kind === "multi" ? "volt" : "ember") : null);
+  renderFight();
   let clipKey = act === "special" && move ? move.id : act;
-  // Attack alternates punch / magic every other hit (reset per battle)
   if (clipKey === "attack") {
     fight.atkHits = (fight.atkHits || 0) + 1;
     clipKey = (fight.atkHits % 2 === 1) ? "attack" : "attack-magic";
@@ -993,16 +1022,25 @@ function resolvePlayerAction(act, move) {
     if (!fight) return;
     const result = applyPlayerAction(act, move);
     if (!result) { clearAnim(); fight.busy = false; renderFight(); return; }
-    clearAnim();
+    let anim = "attack";
+    const flash = result.flash || null;
+    const homePose = result.kind === "defend" || flash === "heal" || flash === "guard";
+    if (homePose) anim = "defend";
+    else if (result.miss) anim = "miss";
+    else if (result.kind === "special") anim = result.hit ? "special-hit" : "special";
+    else if (result.hit) anim = "attack-hit";
+    setAnim(anim, flash);
     renderFight();
     if (fight.e.hp <= 0) {
       finishWin();
-      fight.busy = false;
-      renderFight();
-      showQueue();
+      setTimeout(() => { if (!fight) return; clearAnim(); fight.busy = false; renderFight(); showQueue(); }, 360);
       return;
     }
-    runEnemyPhase();
+    setTimeout(() => {
+      if (!fight) return;
+      clearAnim();
+      runEnemyPhase();
+    }, 280);
   });
 }
 function hpBar(cur, max, cls) {
@@ -1013,12 +1051,34 @@ function renderFight() {
   if (!fight) return go("/battle");
   setTabs(null);
   const P = fight.p, E = fight.e, moves = GM.battleMoves(S.game.skills);
-  const over = fight.over, busy = !!fight.busy;
+  const over = fight.over, busy = !!fight.busy, anim = fight.anim || "";
+  const bossArt = fight.bossArt || (GM.BOSS_ART_FALLBACK && GM.BOSS_ART_FALLBACK[0]) || "";
+  const heroArt = (GM.heroBattleArt && GM.heroBattleArt(S.game)) || GM.HERO_BATTLE_ART || GM.HERO_ART;
   const idle = (GM.battleVideoFor && GM.battleVideoFor("idle")) || { src: "battle/fight-clash.mp4", poster: "battle/fight-clash-poster.jpg" };
+  const flash = fight.animFlash ? ` flash-${fight.animFlash}` : "";
+  const clashHit = anim === "attack-hit" || anim === "special-hit" || anim === "e-attack";
+  const heroCls = ["ff-sprite", "ff-hero",
+    anim === "attack" || anim === "attack-hit" ? "is-attack" : "",
+    anim === "special" || anim === "special-hit" ? "is-special" : "",
+    anim === "defend" ? "is-defend" : "",
+    anim === "miss" ? "is-attack" : "",
+    anim === "e-attack" ? "is-hurt" : "",
+    anim === "e-miss" ? "is-dodge" : "",
+    P.defending || P.guardTurns ? "has-guard" : ""].filter(Boolean).join(" ");
+  const bossCls = ["ff-sprite", "ff-boss",
+    anim === "attack-hit" || anim === "special-hit" ? "is-hurt" : "",
+    anim === "e-attack" || anim === "e-windup" ? "is-attack" : "",
+    anim === "e-defend" ? "is-defend" : "",
+    anim === "e-miss" ? "is-dodge" : "",
+    anim === "miss" ? "is-dodge" : "",
+    E.defending ? "has-guard" : ""].filter(Boolean).join(" ");
   app.innerHTML = `<div class="top"><button class="iconbtn" id="bback" aria-label="Back" ${busy && !over ? "disabled" : ""}>‹</button><h1 style="margin:0;font-size:20px">Rank Battle</h1></div>
-    <div class="battle-stage system-window ff-stage">
-      <div class="ff-arena" aria-hidden="true">
-        <video id="ff-clash" class="ff-clash-video" src="${idle.src}" poster="${idle.poster}" playsinline webkit-playsinline muted preload="metadata" disablepictureinpicture></video>
+    <div class="battle-stage system-window ff-stage${flash}">
+      <div class="ff-arena${clashHit ? " is-impact" : ""}" aria-hidden="true">
+        <video id="ff-clash" class="ff-clash-video ff-clash-video--fx" src="${idle.src}" poster="${idle.poster}" playsinline webkit-playsinline muted preload="metadata" disablepictureinpicture></video>
+        <div class="ff-floor"></div>
+        <div class="${bossCls}" style="--sprite:url('${bossArt}')"><div class="ff-sprite__img"></div><div class="ff-flash"></div></div>
+        <div class="${heroCls}" style="--sprite:url('${heroArt}')"><div class="ff-sprite__img"></div><div class="ff-flash"></div></div>
       </div>
       <div class="ff-hud">
         <div class="battle-side enemy"><div class="battle-name">${h(fight.bossName)}${fight.human ? " · Rival" : ""}</div>${hpBar(E.hp, E.maxHp, "enemy")}</div>
