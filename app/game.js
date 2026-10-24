@@ -258,6 +258,29 @@ function battleMoves(skillIds) {
   for (const [sk, mv] of Object.entries(BATTLE_SKILL_MOVES)) if (set.has(sk)) out.push(mv);
   return out;
 }
+const BATTLE_VIDEOS = {
+  attack: { src: "battle/fx/attack.mp4", poster: "battle/fx/attack-poster.jpg" },
+  "attack-magic": { src: "battle/fx/attack-magic.mp4", poster: "battle/fx/attack-magic-poster.jpg" },
+  defend: { src: "battle/fx/defend.mp4", poster: "battle/fx/defend-poster.jpg" },
+  "temper-strike": { src: "battle/fx/temper.mp4", poster: "battle/fx/temper-poster.jpg" },
+  "brace-pulse": { src: "battle/fx/brace.mp4", poster: "battle/fx/brace-poster.jpg" },
+  "iron-guard": { src: "battle/fx/iron-guard.mp4", poster: "battle/fx/iron-guard-poster.jpg" },
+  "overheat-burst": { src: "battle/fx/overheat.mp4", poster: "battle/fx/overheat-poster.jpg" },
+  "spring-strike": { src: "battle/fx/spring.mp4", poster: "battle/fx/spring-poster.jpg" },
+  "flow-mend": { src: "battle/fx/flow-mend.mp4", poster: "battle/fx/flow-mend-poster.jpg" },
+  "soft-reset": { src: "battle/fx/soft-reset.mp4", poster: "battle/fx/soft-reset-poster.jpg" },
+  "blitz-dash": { src: "battle/fx/blitz-dash.mp4", poster: "battle/fx/blitz-dash-poster.jpg" },
+  "crushing-blow": { src: "battle/fx/crushing-blow.mp4", poster: "battle/fx/crushing-blow-poster.jpg" },
+  "burden-slam": { src: "battle/fx/burden-slam.mp4", poster: "battle/fx/burden-slam-poster.jpg" },
+  "bar-drop": { src: "battle/fx/bar-drop.mp4", poster: "battle/fx/bar-drop-poster.jpg" },
+  "steady-burn": { src: "battle/fx/steady-burn.mp4", poster: "battle/fx/steady-burn-poster.jpg" },
+  enemy: { src: "battle/fx/enemy.mp4", poster: "battle/fx/enemy-poster.jpg" },
+  idle: { src: "battle/fight-clash.mp4", poster: "battle/fight-clash-poster.jpg" },
+  fallback: { src: "battle/fx/attack.mp4", poster: "battle/fx/attack-poster.jpg" }
+};
+function battleVideoFor(key) {
+  return BATTLE_VIDEOS[key] || BATTLE_VIDEOS.fallback;
+}
 function battlePlayerStats(stats) {
   const s = stats || {};
   const STR = s.STR || 10, END = s.END || 10, AGI = s.AGI || 10, VIT = s.VIT || 10, DIS = s.DIS || 10;
@@ -272,5 +295,5 @@ function battlePlayerStats(stats) {
   };
 }
 
-window.HG_GAME = { STATS, RANKS, xpToNext, MAX_LEVEL, LEVEL_POINTS, LEVEL_ALL_STATS, DAILY_POINTS, SETS_PER_STAT, CLASS_LEVEL, MAX_SHIELDS, dailyClearXp, dailyXpCap, CARDIO, statFor, setXp, dailyQuest, rankTrial, CLASS_TRIAL, CLASSES, SKILL_PLANS, SKILLS, VARIATIONS, ACH, newGame, BATTLE_FIRST_UNLOCK, BATTLE_UNLOCK_STEP, BATTLE_LIST_AHEAD, battleUnlockLevel, BOSSES_HAND, HERO_ART, HERO_BATTLE_ART, HERO_SHOWCASE_ART, BOSS_ART_FALLBACK, makeBoss, bossById, listBosses, BATTLE_BASICS, BATTLE_SKILL_MOVES, battleMoves, battlePlayerStats };
+window.HG_GAME = { STATS, RANKS, xpToNext, MAX_LEVEL, LEVEL_POINTS, LEVEL_ALL_STATS, DAILY_POINTS, SETS_PER_STAT, CLASS_LEVEL, MAX_SHIELDS, dailyClearXp, dailyXpCap, CARDIO, statFor, setXp, dailyQuest, rankTrial, CLASS_TRIAL, CLASSES, SKILL_PLANS, SKILLS, VARIATIONS, ACH, newGame, BATTLE_FIRST_UNLOCK, BATTLE_UNLOCK_STEP, BATTLE_LIST_AHEAD, battleUnlockLevel, BOSSES_HAND, HERO_ART, HERO_BATTLE_ART, HERO_SHOWCASE_ART, BOSS_ART_FALLBACK, makeBoss, bossById, listBosses, BATTLE_BASICS, BATTLE_SKILL_MOVES, battleMoves, battlePlayerStats, BATTLE_VIDEOS, battleVideoFor };
 })();
