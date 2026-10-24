@@ -158,19 +158,24 @@ const BATTLE_FIRST_UNLOCK = 3, BATTLE_UNLOCK_STEP = 2, BATTLE_LIST_AHEAD = 20;
 const battleUnlockLevel = i => BATTLE_FIRST_UNLOCK + i * BATTLE_UNLOCK_STEP;
 // Hand-crafted openers (original forge / metal / beast names only)
 const BOSSES_HAND = [
-  { id: "ember-whelp", name: "Ember Whelp", blurb: "A coal-born hatchling with a hot temper.", hp: 90, atk: 12, def: 4 },
-  { id: "scrap-hound", name: "Scrap Hound", blurb: "Junkyard jaws. Packs a mean bite.", hp: 120, atk: 15, def: 6 },
-  { id: "cinder-boar", name: "Cinder Boar", blurb: "Tusks of cooled slag. Charges hard.", hp: 155, atk: 18, def: 8 },
-  { id: "anvil-beetle", name: "Anvil Beetle", blurb: "Shell like a workbench. Slow, stubborn.", hp: 200, atk: 16, def: 14 },
-  { id: "rust-serpent", name: "Rust Serpent", blurb: "Coils of oxidized cable and spite.", hp: 175, atk: 24, def: 9 },
-  { id: "coal-golem", name: "Coal Golem", blurb: "Walking furnace. Heavy fists.", hp: 260, atk: 22, def: 16 },
-  { id: "brass-lynx", name: "Brass Lynx", blurb: "Quick paws, polished claws.", hp: 190, atk: 30, def: 10 },
-  { id: "forge-drake", name: "Forge Drake", blurb: "Bellows breath and tempered scales.", hp: 320, atk: 28, def: 18 },
-  { id: "ironback", name: "Ironback Tortoise", blurb: "Plate shell. Hits like a drop-hammer.", hp: 380, atk: 26, def: 24 },
-  { id: "slag-wyrm", name: "Slag Wyrm", blurb: "Molten spit. Don't stand still.", hp: 340, atk: 36, def: 16 },
-  { id: "temper-sphinx", name: "Temper Sphinx", blurb: "Riddles in heat. Sharp mind, sharper bite.", hp: 420, atk: 34, def: 22 },
-  { id: "quench-leviathan", name: "Quench Leviathan", blurb: "Steam and steel from the cooling trough.", hp: 520, atk: 38, def: 28 }
+  // Stats raised ~40–55% vs early drafts so Defend + specials matter. Humans mid-list.
+  { id: "ember-whelp", name: "Ember Whelp", blurb: "A coal-born hatchling with a hot temper.", hp: 130, atk: 17, def: 6, art: "battle/bosses/ember-whelp.jpg" },
+  { id: "scrap-hound", name: "Scrap Hound", blurb: "Junkyard jaws. Packs a mean bite.", hp: 175, atk: 22, def: 9, art: "battle/bosses/scrap-hound.jpg" },
+  { id: "cinder-boar", name: "Cinder Boar", blurb: "Tusks of cooled slag. Charges hard.", hp: 230, atk: 27, def: 12, art: "battle/bosses/cinder-boar.jpg" },
+  { id: "anvil-beetle", name: "Anvil Beetle", blurb: "Shell like a workbench. Slow, stubborn.", hp: 300, atk: 24, def: 21, art: "battle/bosses/anvil-beetle.jpg" },
+  { id: "iron-warden", name: "Iron Warden", blurb: "Human rival. Plate greaves and a cold stare.", hp: 280, atk: 30, def: 16, art: "battle/bosses/iron-warden.jpg", human: true },
+  { id: "rust-serpent", name: "Rust Serpent", blurb: "Coils of oxidized cable and spite.", hp: 265, atk: 36, def: 14, art: "battle/bosses/rust-serpent.jpg" },
+  { id: "coal-golem", name: "Coal Golem", blurb: "Walking furnace. Heavy fists.", hp: 390, atk: 33, def: 25, art: "battle/bosses/coal-golem.jpg" },
+  { id: "brass-lynx", name: "Brass Lynx", blurb: "Quick paws, polished claws.", hp: 285, atk: 45, def: 15, art: "battle/bosses/brass-lynx.jpg" },
+  { id: "slag-pugilist", name: "Slag Pugilist", blurb: "Human rival. Forge-scarred fists, no mercy.", hp: 340, atk: 42, def: 18, art: "battle/bosses/slag-pugilist.jpg", human: true },
+  { id: "forge-drake", name: "Forge Drake", blurb: "Bellows breath and tempered scales.", hp: 490, atk: 43, def: 28, art: "battle/bosses/forge-drake.jpg" },
+  { id: "ironback", name: "Ironback Tortoise", blurb: "Plate shell. Hits like a drop-hammer.", hp: 580, atk: 40, def: 37, art: "battle/bosses/ironback.jpg" },
+  { id: "slag-wyrm", name: "Slag Wyrm", blurb: "Molten spit. Don't stand still.", hp: 520, atk: 55, def: 25, art: "battle/bosses/slag-wyrm.jpg" },
+  { id: "temper-sphinx", name: "Temper Sphinx", blurb: "Riddles in heat. Sharp mind, sharper bite.", hp: 650, atk: 52, def: 34, art: "battle/bosses/temper-sphinx.jpg" },
+  { id: "quench-leviathan", name: "Quench Leviathan", blurb: "Steam and steel from the cooling trough.", hp: 820, atk: 60, def: 44, art: "battle/bosses/quench-leviathan.jpg" }
 ];
+const HERO_ART = "battle/hero.jpg";
+const BOSS_ART_FALLBACK = ["battle/bosses/ember-whelp.jpg", "battle/bosses/scrap-hound.jpg", "battle/bosses/cinder-boar.jpg", "battle/bosses/coal-golem.jpg", "battle/bosses/forge-drake.jpg", "battle/bosses/slag-wyrm.jpg"];
 const BOSS_PREFIX = ["Ember", "Slag", "Brass", "Iron", "Cinder", "Tempered", "Quench", "Ore", "Flux", "Spark", "Anvil", "Bellows", "Crucible", "Hammer", "Ingots", "Molten", "Rust", "Coal", "Forge", "Steel"];
 const BOSS_SUFFIX = ["Whelp", "Hound", "Boar", "Beetle", "Serpent", "Golem", "Lynx", "Drake", "Tortoise", "Wyrm", "Sphinx", "Leviathan", "Raven", "Mantis", "Ox", "Viper", "Crab", "Moth", "Stag", "Ape"];
 function _seed(n) { let x = (n * 1103515245 + 12345) >>> 0; return () => { x = (x * 1664525 + 1013904223) >>> 0; return x / 4294967296; }; }
@@ -183,11 +188,13 @@ function makeBoss(i) {
   const rnd = _seed(i * 9973 + 17);
   const name = BOSS_PREFIX[Math.floor(rnd() * BOSS_PREFIX.length)] + " " + BOSS_SUFFIX[Math.floor(rnd() * BOSS_SUFFIX.length)];
   const tier = unlock;
-  const hp = Math.round(80 + tier * 16 + rnd() * tier * 4);
-  const atk = Math.round(10 + tier * 1.1 + rnd() * 6);
-  const def = Math.round(3 + tier * 0.7 + rnd() * 4);
+  // ~45% harder than the original procedural curve
+  const hp = Math.round(115 + tier * 24 + rnd() * tier * 6);
+  const atk = Math.round(14 + tier * 1.65 + rnd() * 8);
+  const def = Math.round(5 + tier * 1.05 + rnd() * 5);
   const id = "forge-" + i;
-  return { id, name, blurb: "A forge-born challenger scaled to your climb.", hp, atk, def, unlock, idx: i, xpClear: 40 + unlock * 8, xpRematch: 12 + unlock * 2 };
+  const art = BOSS_ART_FALLBACK[i % BOSS_ART_FALLBACK.length];
+  return { id, name, blurb: "A forge-born challenger scaled to your climb.", hp, atk, def, art, unlock, idx: i, xpClear: 40 + unlock * 8, xpRematch: 12 + unlock * 2 };
 }
 function bossById(id) {
   if (!id) return null;
@@ -263,5 +270,5 @@ function battlePlayerStats(stats) {
   };
 }
 
-window.HG_GAME = { STATS, RANKS, xpToNext, MAX_LEVEL, LEVEL_POINTS, LEVEL_ALL_STATS, DAILY_POINTS, SETS_PER_STAT, CLASS_LEVEL, MAX_SHIELDS, dailyClearXp, dailyXpCap, CARDIO, statFor, setXp, dailyQuest, rankTrial, CLASS_TRIAL, CLASSES, SKILL_PLANS, SKILLS, VARIATIONS, ACH, newGame, BATTLE_FIRST_UNLOCK, BATTLE_UNLOCK_STEP, BATTLE_LIST_AHEAD, battleUnlockLevel, BOSSES_HAND, makeBoss, bossById, listBosses, BATTLE_BASICS, BATTLE_SKILL_MOVES, battleMoves, battlePlayerStats };
+window.HG_GAME = { STATS, RANKS, xpToNext, MAX_LEVEL, LEVEL_POINTS, LEVEL_ALL_STATS, DAILY_POINTS, SETS_PER_STAT, CLASS_LEVEL, MAX_SHIELDS, dailyClearXp, dailyXpCap, CARDIO, statFor, setXp, dailyQuest, rankTrial, CLASS_TRIAL, CLASSES, SKILL_PLANS, SKILLS, VARIATIONS, ACH, newGame, BATTLE_FIRST_UNLOCK, BATTLE_UNLOCK_STEP, BATTLE_LIST_AHEAD, battleUnlockLevel, BOSSES_HAND, HERO_ART, BOSS_ART_FALLBACK, makeBoss, bossById, listBosses, BATTLE_BASICS, BATTLE_SKILL_MOVES, battleMoves, battlePlayerStats };
 })();

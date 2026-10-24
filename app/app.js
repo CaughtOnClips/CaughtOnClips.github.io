@@ -352,7 +352,7 @@ function statusWindow() {
   const G = S.game, r = curRank(), need = GM.xpToNext(G.level), nr = nextRank();
   const used = Object.values(pend).reduce((a, b) => a + b, 0), left = G.points - used, spent = Object.values(sessionSpent).reduce((a, b) => a + b, 0);
   return `<div class="system-window" id="status"><div class="system-window__title">Status</div>
-    <div class="head"><span class="rank-badge" data-rank="${r.k}" aria-label="Rank ${r.k} ${r.name}">${r.k}</span><div><b>${h(G.name || "Lifter")} · LV ${G.level}</b><small>Rank ${r.k} · ${r.name} · streak ${G.streak} day${G.streak === 1 ? "" : "s"}</small><small>${h(G.cls ? GM.CLASSES.find(c => c.id === G.cls).name : "No class")} · ${h(G.title)} · 🛡 ${G.shields}</small></div></div>
+    <div class="head"><img class="hero-status-art" src="${GM.HERO_ART}" alt="" width="56" height="56" decoding="async"><span class="rank-badge" data-rank="${r.k}" aria-label="Rank ${r.k} ${r.name}">${r.k}</span><div><b>${h(G.name || "Lifter")} · LV ${G.level}</b><small>Rank ${r.k} · ${r.name} · streak ${G.streak} day${G.streak === 1 ? "" : "s"}</small><small>${h(G.cls ? GM.CLASSES.find(c => c.id === G.cls).name : "No class")} · ${h(G.title)} · 🛡 ${G.shields}</small></div></div>
     <div class="xp-bar" role="progressbar" aria-label="XP" aria-valuemin="0" aria-valuemax="${need}" aria-valuenow="${G.xp}"><div class="xp-bar__fill" style="--xp:${(G.xp / need * 100).toFixed(1)}%"></div></div>
     <div class="xpline"><span>${G.xp.toLocaleString()} / ${need.toLocaleString()} XP</span><span>${G.level >= GM.MAX_LEVEL ? "Max level" : nr ? (G.level >= nr.level ? `<a href="#/quests">Rank Trial ${nr.k} open ›</a>` : `Rank ${nr.k} at Lv ${nr.level}`) : "Max rank"}</span></div>
     <div class="pts"><span>Attribute points</span><b id="pts">${left}</b></div>
@@ -751,10 +751,11 @@ function ensureBattles() {
 function startFight(boss) {
   const ps = GM.battlePlayerStats(S.game.stats);
   fight = {
-    bossId: boss.id, bossName: boss.name, unlock: boss.unlock,
+    bossId: boss.id, bossName: boss.name, bossArt: boss.art || null, unlock: boss.unlock, human: !!boss.human,
     p: { hp: ps.maxHp, maxHp: ps.maxHp, atk: ps.atk, def: ps.def, crit: ps.crit, acc: ps.acc, resist: ps.resist, stam: ps.staminaMax, stamMax: ps.staminaMax, defending: false, guardTurns: 0, dot: 0, dotTurns: 0 },
     e: { hp: boss.hp, maxHp: boss.hp, atk: boss.atk, def: boss.def, defending: false, shred: 0 },
-    log: [`${boss.name} enters the forge.`], over: null, busy: false
+    log: [`${boss.name} enters the forge.`], over: null, busy: false,
+    anim: null, animFlash: null, spamAtks: 0
   };
 }
 function pushLog(msg) { if (fight) { fight.log.push(msg); if (fight.log.length > 8) fight.log.shift(); } }
@@ -775,41 +776,44 @@ function applyPlayerDmg(amt) {
 function applyEnemyDmg(amt) {
   const E = fight.e; let d = amt;
   if (E.defending) d = Math.round(d * 0.5);
-  const def = Math.max(0, E.def * (1 - (E.shred || 0)));
-  // atk already baked into amt via calcDmg; shred applied by lowering effective def at calc time preferred
   E.hp = Math.max(0, E.hp - d);
   return d;
 }
+function clearAnim() { if (fight) { fight.anim = null; fight.animFlash = null; } }
+function setAnim(kind, flash) { if (fight) { fight.anim = kind; fight.animFlash = flash || null; } }
 function enemyTurn() {
   const P = fight.p, E = fight.e;
-  if (E.hp <= 0) return;
-  // Simple AI: defend if low HP ~20%, else attack
+  if (E.hp <= 0) return { kind: "idle" };
   E.defending = false;
-  if (E.hp / E.maxHp < 0.28 && Math.random() < 0.35) {
+  const hpRatio = E.hp / E.maxHp;
+  const punish = fight.spamAtks >= 3;
+  let roll = Math.random();
+  // Smarter AI: brace more often when hurt, occasional heavy, punish attack-spam
+  if (!punish && hpRatio < 0.35 && roll < 0.4) {
     E.defending = true;
     pushLog(`${fight.bossName} braces.`);
-  } else {
-    if (!hitChance(0.88)) { pushLog(`${fight.bossName} misses.`); }
-    else {
-      const crit = Math.random() < 0.08;
-      const dmg = calcDmg(E.atk, P.def, 1, crit);
-      const taken = applyPlayerDmg(dmg);
-      pushLog(`${fight.bossName}${crit ? " crits" : " hits"} for ${taken}.`);
-    }
+    fight.spamAtks = 0;
+    return { kind: "e-defend" };
   }
-  // tick lifter DoT on enemy at end of round already applied; tick guard
-  if (P.guardTurns > 0) P.guardTurns--;
-  if (P.dotTurns > 0 && E.hp > 0) {
-    const burn = Math.max(1, Math.round(P.dot));
-    E.hp = Math.max(0, E.hp - burn);
-    pushLog(`Steady Burn deals ${burn}.`);
-    P.dotTurns--;
+  if (!punish && roll < 0.18) {
+    E.defending = true;
+    pushLog(`${fight.bossName} raises a guard.`);
+    return { kind: "e-defend" };
   }
-  P.defending = false;
-  // small stamina regen
-  P.stam = Math.min(P.stamMax, P.stam + 1);
-  if (P.hp <= 0) { fight.over = "lose"; pushLog("You fall. Retry anytime."); }
-  else if (E.hp <= 0) finishWin();
+  const heavy = punish || Math.random() < 0.28;
+  const mult = punish ? 1.55 : heavy ? 1.4 : 1;
+  if (!hitChance(0.88)) {
+    pushLog(`${fight.bossName} misses.`);
+    fight.spamAtks = 0;
+    return { kind: "e-miss" };
+  }
+  const crit = Math.random() < (punish ? 0.18 : 0.1);
+  const dmg = calcDmg(E.atk, P.def, mult, crit);
+  const taken = applyPlayerDmg(dmg);
+  const tag = punish ? " counters" : heavy ? (crit ? " heavy crits" : " hammers") : (crit ? " crits" : " hits");
+  pushLog(`${fight.bossName}${tag} for ${taken}.`);
+  fight.spamAtks = 0;
+  return { kind: "e-attack", hit: true };
 }
 function finishWin() {
   ensureBattles();
@@ -822,25 +826,50 @@ function finishWin() {
   queue({ kind: "battle", name: boss.name, xp, first });
   addXp(xp); checkProgress(); save();
 }
-function resolvePlayerAction(act, move) {
-  if (!fight || fight.over || fight.busy) return;
+function tickAfterEnemy() {
+  const P = fight.p, E = fight.e;
+  if (P.guardTurns > 0) P.guardTurns--;
+  if (P.dotTurns > 0 && E.hp > 0) {
+    const burn = Math.max(1, Math.round(P.dot));
+    E.hp = Math.max(0, E.hp - burn);
+    pushLog(`Steady Burn deals ${burn}.`);
+    P.dotTurns--;
+  }
+  P.defending = false;
+  P.stam = Math.min(P.stamMax, P.stam + 1);
+  if (P.hp <= 0) { fight.over = "lose"; pushLog("You fall. Retry anytime."); }
+  else if (E.hp <= 0) finishWin();
+}
+function applyPlayerAction(act, move) {
   const P = fight.p, E = fight.e;
   P.defending = false; E.defending = false;
+  let result = { kind: act, hit: false, miss: false, flash: null };
   if (act === "attack") {
-    if (!hitChance(P.acc)) pushLog("Your strike misses.");
+    fight.spamAtks = (fight.spamAtks || 0) + 1;
+    if (!hitChance(P.acc)) { pushLog("Your strike misses."); result.miss = true; }
     else {
       const crit = rollCrit(P.crit, 0);
       const def = Math.max(0, E.def * (1 - (E.shred || 0)));
       const dmg = calcDmg(P.atk, def, 1, crit);
       E.hp = Math.max(0, E.hp - dmg);
       pushLog(`You${crit ? " crit" : " hit"} for ${dmg}.`);
+      result.hit = true;
     }
   } else if (act === "defend") {
+    fight.spamAtks = 0;
     P.defending = true;
     pushLog("You defend. Incoming damage cut.");
+    result.kind = "defend";
   } else if (act === "special" && move) {
-    if (P.stam < move.cost) { toast("Not enough stamina"); return; }
+    fight.spamAtks = 0;
+    if (P.stam < move.cost) { toast("Not enough stamina"); return null; }
     P.stam -= move.cost;
+    result.kind = "special";
+    result.flash = move.kind === "heal" || move.kind === "cleanse" ? "heal"
+      : move.kind === "defend+" ? "guard"
+      : move.kind === "dot" ? "burn"
+      : move.kind === "multi" ? "volt"
+      : "ember";
     if (move.kind === "dmg" || move.kind === "multi") {
       const hits = move.hits || 1;
       let total = 0;
@@ -849,10 +878,11 @@ function resolvePlayerAction(act, move) {
         const crit = rollCrit(P.crit, move.crit || 0);
         const def = Math.max(0, E.def * (1 - (E.shred || 0)));
         const dmg = calcDmg(P.atk, def, move.mult || 1, crit);
-        E.hp = Math.max(0, E.hp - dmg); total += dmg;
+        E.hp = Math.max(0, E.hp - dmg); total += dmg; result.hit = true;
       }
       if (move.shred) E.shred = Math.min(0.5, (E.shred || 0) + move.shred);
       if (total) pushLog(`${move.name} deals ${total}.`);
+      if (!result.hit) result.miss = true;
     } else if (move.kind === "heal") {
       const heal = Math.round(P.maxHp * (move.heal || 0.15));
       P.hp = Math.min(P.maxHp, P.hp + heal);
@@ -860,10 +890,12 @@ function resolvePlayerAction(act, move) {
     } else if (move.kind === "defend+") {
       P.defending = true; P.guardTurns = move.turns || 2;
       pushLog(`${move.name}: guard up.`);
+      result.kind = "defend";
     } else if (move.kind === "dot") {
       P.dot = Math.round(P.atk * (move.mult || 0.4));
       P.dotTurns = move.turns || 3;
       pushLog(`${move.name}: burn applied.`);
+      result.hit = true;
     } else if (move.kind === "cleanse") {
       P.dot = 0; P.dotTurns = 0;
       const heal = Math.round(P.maxHp * (move.heal || 0.1));
@@ -871,10 +903,66 @@ function resolvePlayerAction(act, move) {
       pushLog(`${move.name}: cleared +${heal} HP.`);
     }
   }
-  if (E.hp <= 0) { finishWin(); renderFight(); showQueue(); return; }
-  enemyTurn();
+  return result;
+}
+const ANIM_MS = { attack: 520, special: 620, defend: 450, miss: 480, "e-attack": 560, "e-defend": 420, "e-miss": 480 };
+function resolvePlayerAction(act, move) {
+  if (!fight || fight.over || fight.busy) return;
+  if (act === "special" && move && fight.p.stam < move.cost) { toast("Not enough stamina"); return; }
+  fight.busy = true;
+  // Preview anim before resolving hit so the lunge reads first
+  let preview = act === "defend" ? "defend" : act === "special" ? "special" : "attack";
+  let flash = null;
+  if (act === "special" && move) {
+    flash = move.kind === "heal" || move.kind === "cleanse" ? "heal"
+      : move.kind === "defend+" ? "guard"
+      : move.kind === "dot" ? "burn"
+      : move.kind === "multi" ? "volt"
+      : "ember";
+    if (move.kind === "defend+") preview = "defend";
+    if (move.kind === "heal" || move.kind === "cleanse") preview = "defend";
+  }
+  setAnim(preview, flash);
   renderFight();
-  if (fight.over === "win") showQueue();
+  const t0 = ANIM_MS[preview] || 520;
+  setTimeout(() => {
+    if (!fight) return;
+    const result = applyPlayerAction(act, move);
+    if (!result) { clearAnim(); fight.busy = false; renderFight(); return; }
+    if (result.miss) setAnim("miss", null);
+    else if (result.hit && (result.kind === "attack" || result.kind === "special")) setAnim(result.kind === "special" ? "special-hit" : "attack-hit", result.flash);
+    else setAnim(result.kind === "defend" ? "defend" : preview, result.flash);
+    renderFight();
+    if (fight.e.hp <= 0) {
+      finishWin();
+      setTimeout(() => { if (!fight) return; clearAnim(); fight.busy = false; renderFight(); showQueue(); }, 380);
+      return;
+    }
+    const gap = result.miss ? 420 : 280;
+    setTimeout(() => {
+      if (!fight || fight.over) { if (fight) { clearAnim(); fight.busy = false; renderFight(); } return; }
+      // Enemy telegraph
+      setAnim("e-windup", null);
+      renderFight();
+      setTimeout(() => {
+        if (!fight || fight.over) return;
+        const er = enemyTurn();
+        tickAfterEnemy();
+        if (er.kind === "e-defend") setAnim("e-defend", null);
+        else if (er.kind === "e-miss") setAnim("e-miss", null);
+        else setAnim("e-attack", null);
+        renderFight();
+        const tE = ANIM_MS[er.kind] || 520;
+        setTimeout(() => {
+          if (!fight) return;
+          clearAnim();
+          fight.busy = false;
+          renderFight();
+          if (fight.over === "win") showQueue();
+        }, tE);
+      }, 220);
+    }, gap);
+  }, t0);
 }
 function hpBar(cur, max, cls) {
   const pct = Math.max(0, Math.min(100, (cur / Math.max(1, max)) * 100));
@@ -884,27 +972,50 @@ function renderFight() {
   if (!fight) return go("/battle");
   setTabs(null);
   const P = fight.p, E = fight.e, moves = GM.battleMoves(S.game.skills);
-  const over = fight.over;
-  app.innerHTML = `<div class="top"><button class="iconbtn" id="bback" aria-label="Back">‹</button><h1 style="margin:0;font-size:20px">Rank Battle</h1></div>
-    <div class="battle-stage system-window">
-      <div class="battle-side enemy"><div class="battle-name">${h(fight.bossName)}</div>${hpBar(E.hp, E.maxHp, "enemy")}</div>
-      <div class="battle-side you"><div class="battle-name">${h(S.game.name || "Lifter")} · LV ${S.game.level}</div>${hpBar(P.hp, P.maxHp, "you")}
-        <div class="battle-stam">Stamina ${P.stam}/${P.stamMax}${P.guardTurns ? " · Guard" : ""}${P.defending ? " · Defend" : ""}</div></div>
+  const over = fight.over, busy = !!fight.busy, anim = fight.anim || "";
+  const bossArt = fight.bossArt || (GM.BOSS_ART_FALLBACK && GM.BOSS_ART_FALLBACK[0]) || "";
+  const flash = fight.animFlash ? ` flash-${fight.animFlash}` : "";
+  const heroCls = ["ff-sprite", "ff-hero", anim === "attack" || anim === "attack-hit" ? "is-attack" : "",
+    anim === "special" || anim === "special-hit" ? "is-special" : "",
+    anim === "defend" ? "is-defend" : "",
+    anim === "miss" ? "is-dodge" : "",
+    anim === "e-attack" ? "is-hurt" : "",
+    anim === "e-miss" ? "is-dodge" : "",
+    P.defending || P.guardTurns ? "has-guard" : ""].filter(Boolean).join(" ");
+  const bossCls = ["ff-sprite", "ff-boss", anim === "attack-hit" || anim === "special-hit" ? "is-hurt" : "",
+    anim === "e-attack" || anim === "e-windup" ? "is-attack" : "",
+    anim === "e-defend" ? "is-defend" : "",
+    anim === "e-miss" ? "is-dodge" : "",
+    anim === "miss" ? "is-dodge" : "",
+    E.defending ? "has-guard" : ""].filter(Boolean).join(" ");
+  app.innerHTML = `<div class="top"><button class="iconbtn" id="bback" aria-label="Back" ${busy && !over ? "disabled" : ""}>‹</button><h1 style="margin:0;font-size:20px">Rank Battle</h1></div>
+    <div class="battle-stage system-window ff-stage${flash}">
+      <div class="ff-arena" aria-hidden="true">
+        <div class="ff-floor"></div>
+        <div class="${bossCls}" style="--sprite:url('${bossArt}')"><div class="ff-sprite__img"></div><div class="ff-flash"></div></div>
+        <div class="${heroCls}" style="--sprite:url('${GM.HERO_ART}')"><div class="ff-sprite__img"></div><div class="ff-flash"></div></div>
+      </div>
+      <div class="ff-hud">
+        <div class="battle-side enemy"><div class="battle-name">${h(fight.bossName)}${fight.human ? " · Rival" : ""}</div>${hpBar(E.hp, E.maxHp, "enemy")}</div>
+        <div class="battle-side you"><div class="battle-name">${h(S.game.name || "Lifter")} · LV ${S.game.level}</div>${hpBar(P.hp, P.maxHp, "you")}
+          <div class="battle-stam">Stamina ${P.stam}/${P.stamMax}${P.guardTurns ? " · Guard" : ""}${P.defending ? " · Defend" : ""}</div></div>
+      </div>
       <div class="battle-log" aria-live="polite">${fight.log.map(l => `<div>${h(l)}</div>`).join("")}</div>
       ${over === "win" ? `<div class="stack"><button class="btn" id="bdone">Continue</button></div>`
         : over === "lose" ? `<div class="stack"><button class="btn" id="bretry">Retry</button><button class="btn ghost" id="bdone">Back to list</button></div>`
         : `<div class="battle-actions">
-            <button class="btn sm" data-act="attack">Attack</button>
-            <button class="btn sm ghost" data-act="defend">Defend</button>
+            <button class="btn sm" data-act="attack" ${busy ? "disabled" : ""}>Attack</button>
+            <button class="btn sm ghost" data-act="defend" ${busy ? "disabled" : ""}>Defend</button>
           </div>
-          <div class="battle-specials">${moves.map(m => `<button class="btn sm outline" data-move="${m.id}" ${P.stam < m.cost ? "disabled" : ""} title="${h(m.desc)}">${h(m.name)} · ${m.cost}</button>`).join("")}</div>
+          <div class="battle-specials">${moves.map(m => `<button class="btn sm outline" data-move="${m.id}" ${busy || P.stam < m.cost ? "disabled" : ""} title="${h(m.desc)}">${h(m.name)} · ${m.cost}</button>`).join("")}</div>
           <p class="small muted center" style="margin:8px 0 0">Specials come from unlocked skills. Basics are always ready.</p>`}
     </div>`;
-  $("#bback").onclick = () => { if (!over) confirmSheet("Leave battle?", "Progress in this fight is lost. Cleared bosses stay cleared.", "Leave", () => { fight = null; go("/battle"); }, true); else { fight = null; go("/battle"); } };
+  $("#bback").onclick = () => { if (busy && !over) return; if (!over) confirmSheet("Leave battle?", "Progress in this fight is lost. Cleared bosses stay cleared.", "Leave", () => { fight = null; go("/battle"); }, true); else { fight = null; go("/battle"); } };
   if ($("#bdone")) $("#bdone").onclick = () => { fight = null; go("/battle"); };
   if ($("#bretry")) $("#bretry").onclick = () => { const b = GM.bossById(fight.bossId); startFight(b); renderFight(); };
-  app.querySelectorAll("[data-act]").forEach(b => b.onclick = () => resolvePlayerAction(b.dataset.act));
+  app.querySelectorAll("[data-act]").forEach(b => b.onclick = () => { if (!fight.busy) resolvePlayerAction(b.dataset.act); });
   app.querySelectorAll("[data-move]").forEach(b => b.onclick = () => {
+    if (fight.busy) return;
     const mv = moves.find(m => m.id === b.dataset.move); if (mv) resolvePlayerAction("special", mv);
   });
 }
@@ -920,10 +1031,13 @@ VIEWS.battle = () => {
       ${list.length ? list.map(b => {
         const state = b.cleared ? "cleared" : b.unlocked ? "open" : "locked";
         const xpHint = b.cleared ? `Rematch +${b.xpRematch} XP` : b.unlocked ? `Clear +${b.xpClear} XP` : `Opens at Lv ${b.unlock}`;
-        return `<div class="battle-card ${state}"><div class="row between"><div><b>${h(b.name)}</b><div class="muted small">${h(b.blurb)}</div></div>
+        const art = b.art || "";
+        return `<div class="battle-card ${state}"><div class="row between" style="align-items:flex-start;gap:12px">
+          <div class="battle-card__art" style="${art ? `--art:url('${art}')` : ""}"></div>
+          <div style="flex:1;min-width:0"><div class="row between"><div><b>${h(b.name)}</b>${b.human ? ` <span class="pill volt" style="margin-left:6px">Rival</span>` : ""}<div class="muted small">${h(b.blurb)}</div></div>
           <span class="pill ${b.cleared ? "good" : b.unlocked ? "volt" : "locked"}">${b.cleared ? "Cleared" : b.unlocked ? "Open" : "Lv " + b.unlock}</span></div>
           <div class="row between" style="margin-top:10px"><span class="muted small">HP ${b.hp} · ATK ${b.atk} · DEF ${b.def}</span><span class="muted small">${xpHint}</span></div>
-          ${b.unlocked ? `<button class="btn sm" style="width:100%;margin-top:10px" data-fight="${b.id}">${b.cleared ? "Rematch" : "Fight"}</button>` : ""}</div>`;
+          ${b.unlocked ? `<button class="btn sm" style="width:100%;margin-top:10px" data-fight="${b.id}">${b.cleared ? "Rematch" : "Fight"}</button>` : ""}</div></div></div>`;
       }).join("") : `<p class="center muted">No challengers listed yet.</p>`}
     </div>`;
   app.querySelectorAll("[data-fight]").forEach(b => b.onclick = () => {

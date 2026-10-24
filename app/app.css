@@ -209,17 +209,39 @@ button.card{width:100%;text-align:left;cursor:pointer;font:inherit}
 .exgroup span{opacity:.7;font-weight:400}
 #res .opt b{font-size:16px;line-height:1.25}
 
-/* ---------- Rank Battle ---------- */
+/* ---------- Rank Battle (classic FF side-view) ---------- */
+.hero-status-art{width:56px;height:56px;border-radius:12px;object-fit:cover;object-position:center top;border:2px solid rgba(58,184,255,.45);box-shadow:0 0 14px rgba(58,184,255,.25);flex:0 0 auto;background:var(--color-surface-2)}
 .battle-card{position:relative;display:block;background:var(--color-window);border:var(--border-width) solid var(--border-color);border-radius:var(--radius-window);box-shadow:var(--glow);padding:14px 14px 12px;margin-top:12px}
 .battle-card.locked{opacity:.72}
 .battle-card.cleared{border-color:rgba(80,220,160,.35)}
 .battle-card.open{border-color:rgba(58,184,255,.45)}
+.battle-card__art{flex:0 0 64px;width:64px;height:64px;border-radius:10px;background:var(--color-surface-2) center/cover no-repeat;background-image:var(--art);border:1px solid var(--border-color);box-shadow:inset 0 0 0 1px rgba(255,255,255,.04)}
+.battle-card.locked .battle-card__art{filter:grayscale(.55) brightness(.7)}
 .battle-stage{margin-top:8px}
-.battle-side{margin-bottom:14px}
+.ff-stage{position:relative;overflow:hidden}
+.ff-arena{position:relative;height:210px;margin:4px -4px 12px;border-radius:calc(var(--radius-window) - 4px);overflow:hidden;
+  background:
+    radial-gradient(ellipse 90% 55% at 50% 108%, rgba(255,120,40,.22), transparent 55%),
+    linear-gradient(180deg, #1a0f0c 0%, #2a1810 38%, #3d2214 62%, #1c120e 100%);
+  border:1px solid rgba(255,140,60,.18);box-shadow:inset 0 0 40px rgba(0,0,0,.45)}
+.ff-arena::before{content:"";position:absolute;inset:0;background:
+  repeating-linear-gradient(90deg, transparent 0 18px, rgba(255,160,80,.03) 18px 19px),
+  repeating-linear-gradient(0deg, transparent 0 22px, rgba(0,0,0,.08) 22px 23px);
+  opacity:.7;pointer-events:none}
+.ff-floor{position:absolute;left:0;right:0;bottom:0;height:42%;background:linear-gradient(180deg, transparent, rgba(20,10,6,.55) 40%, rgba(8,4,2,.75));pointer-events:none}
+.ff-sprite{position:absolute;width:112px;height:128px;transform-origin:center bottom;will-change:transform,filter}
+.ff-sprite__img{width:100%;height:100%;border-radius:10px;background:center/cover no-repeat;background-image:var(--sprite);background-color:var(--color-surface-2);
+  border:2px solid rgba(255,255,255,.12);box-shadow:0 8px 20px rgba(0,0,0,.45);overflow:hidden}
+.ff-boss{left:10px;top:28px}
+.ff-boss .ff-sprite__img{border-color:rgba(255,120,60,.4);transform:scaleX(-1)}
+.ff-hero{right:10px;bottom:18px;width:118px;height:136px}
+.ff-hero .ff-sprite__img{border-color:rgba(58,184,255,.5);box-shadow:0 8px 22px rgba(58,184,255,.2),0 8px 20px rgba(0,0,0,.45)}
+.ff-flash{position:absolute;inset:0;border-radius:10px;pointer-events:none;opacity:0;mix-blend-mode:screen}
+.ff-hud .battle-side{margin-bottom:10px}
 .battle-side.enemy .battle-name{color:var(--color-accent)}
 .battle-name{font:700 16px/1.2 var(--font-display,var(--font-display-fb));letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px}
 .bh-bar{height:12px;border-radius:4px;background:var(--color-surface-2);overflow:hidden;border:1px solid var(--border-color)}
-.bh-bar__fill{height:100%;width:0;background:linear-gradient(90deg,var(--color-primary),var(--color-primary-2));box-shadow:0 0 10px var(--color-primary-2);transition:width .2s ease}
+.bh-bar__fill{height:100%;width:0;background:linear-gradient(90deg,var(--color-primary),var(--color-primary-2));box-shadow:0 0 10px var(--color-primary-2);transition:width .25s ease}
 .bh-bar.enemy .bh-bar__fill{background:linear-gradient(90deg,#ff6b3d,#ffc94a);box-shadow:0 0 10px rgba(255,107,61,.45)}
 .bh-bar.you .bh-bar__fill{background:linear-gradient(90deg,var(--color-glow),#7cf0ff);box-shadow:0 0 10px var(--color-glow)}
 .bh-nums{font:600 12px var(--font-mono,monospace);color:var(--color-text-muted);margin-top:4px}
@@ -231,6 +253,94 @@ button.card{width:100%;text-align:left;cursor:pointer;font:inherit}
 .battle-actions .btn{width:100%}
 .battle-specials{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .battle-specials .btn{width:100%;min-height:48px;font-size:12px;letter-spacing:.06em;padding:8px 10px}
+.battle-actions .btn:disabled,.battle-specials .btn:disabled{opacity:.45;cursor:not-allowed}
+
+/* Action keyframes — short CSS motion, not sprite sheets */
+.ff-hero.is-attack{animation:ff-hero-lunge .52s ease-out}
+.ff-hero.is-special{animation:ff-hero-special .62s ease-out}
+.ff-hero.is-defend{animation:ff-hero-guard .45s ease}
+.ff-hero.is-dodge{animation:ff-dodge .48s ease}
+.ff-hero.is-hurt{animation:ff-hurt-hero .56s ease}
+.ff-hero.has-guard .ff-sprite__img{filter:brightness(1.08) saturate(1.1);box-shadow:0 0 16px rgba(120,220,255,.45),0 8px 20px rgba(0,0,0,.45)}
+.ff-boss.is-attack{animation:ff-boss-lunge .56s ease-out}
+.ff-boss.is-defend{animation:ff-boss-guard .42s ease}
+.ff-boss.is-dodge{animation:ff-dodge-boss .48s ease}
+.ff-boss.is-hurt{animation:ff-hurt-boss .4s ease}
+.ff-boss.has-guard .ff-sprite__img{filter:brightness(1.05);box-shadow:0 0 14px rgba(255,180,80,.35),0 8px 20px rgba(0,0,0,.45)}
+.ff-hero.is-special .ff-flash,.ff-stage.flash-ember .ff-hero.is-special .ff-flash,.ff-stage.flash-ember .ff-boss.is-hurt .ff-flash{opacity:1;background:radial-gradient(circle,rgba(255,140,40,.7),transparent 70%);animation:ff-flash-pulse .5s ease}
+.ff-stage.flash-volt .ff-hero.is-special .ff-flash,.ff-stage.flash-volt .ff-boss.is-hurt .ff-flash{opacity:1;background:radial-gradient(circle,rgba(80,200,255,.75),transparent 70%);animation:ff-flash-pulse .5s ease}
+.ff-stage.flash-burn .ff-hero.is-special .ff-flash,.ff-stage.flash-burn .ff-boss.is-hurt .ff-flash{opacity:1;background:radial-gradient(circle,rgba(255,80,40,.7),transparent 70%);animation:ff-flash-pulse .5s ease}
+.ff-stage.flash-heal .ff-hero.is-defend .ff-flash,.ff-stage.flash-guard .ff-hero.is-defend .ff-flash{opacity:1;background:radial-gradient(circle,rgba(100,255,180,.65),transparent 70%);animation:ff-flash-pulse .45s ease}
+.ff-hero.is-defend .ff-flash{opacity:1;background:radial-gradient(circle,rgba(140,210,255,.55),transparent 70%);animation:ff-flash-pulse .4s ease}
+.ff-boss.is-hurt .ff-flash{opacity:1;background:radial-gradient(circle,rgba(255,220,120,.8),transparent 65%);animation:ff-flash-pulse .35s ease}
+.ff-hero.is-hurt .ff-flash{opacity:1;background:radial-gradient(circle,rgba(255,60,60,.75),transparent 65%);animation:ff-flash-pulse .4s ease}
+
+@keyframes ff-hero-lunge{
+  0%{transform:translate(0,0)}
+  35%{transform:translate(-54px,-6px) scale(1.04)}
+  55%{transform:translate(-48px,-4px)}
+  100%{transform:translate(0,0)}
+}
+@keyframes ff-hero-special{
+  0%{transform:translate(0,0) scale(1);filter:brightness(1)}
+  25%{transform:translate(-20px,-10px) scale(1.06);filter:brightness(1.25)}
+  45%{transform:translate(-68px,-8px) scale(1.1);filter:brightness(1.35)}
+  70%{transform:translate(-40px,-4px)}
+  100%{transform:translate(0,0) scale(1);filter:brightness(1)}
+}
+@keyframes ff-hero-guard{
+  0%{transform:scale(1)}
+  40%{transform:scale(1.06) translateY(-4px);filter:brightness(1.2) drop-shadow(0 0 8px rgba(120,220,255,.8))}
+  100%{transform:scale(1.03);filter:brightness(1.08)}
+}
+@keyframes ff-boss-lunge{
+  0%{transform:translate(0,0)}
+  35%{transform:translate(54px,-4px) scale(1.04)}
+  55%{transform:translate(46px,-2px)}
+  100%{transform:translate(0,0)}
+}
+@keyframes ff-boss-guard{
+  0%{transform:scale(1)}
+  45%{transform:scale(1.05);filter:brightness(1.15)}
+  100%{transform:scale(1.02)}
+}
+@keyframes ff-hurt-boss{
+  0%{transform:translate(0,0);filter:none}
+  20%{transform:translate(-10px,2px);filter:brightness(1.6) saturate(1.4)}
+  40%{transform:translate(8px,-2px);filter:brightness(2)}
+  60%{transform:translate(-6px,1px)}
+  100%{transform:translate(0,0);filter:none}
+}
+@keyframes ff-hurt-hero{
+  0%{transform:translate(0,0);filter:none}
+  25%{transform:translate(12px,2px);filter:brightness(1.4) sepia(.4) hue-rotate(-40deg)}
+  50%{transform:translate(-8px,0);filter:brightness(1.8) sepia(.5) hue-rotate(-50deg)}
+  100%{transform:translate(0,0);filter:none}
+}
+@keyframes ff-dodge{
+  0%{transform:translate(0,0);opacity:1}
+  35%{transform:translate(28px,-8px);opacity:.45}
+  100%{transform:translate(0,0);opacity:1}
+}
+@keyframes ff-dodge-boss{
+  0%{transform:translate(0,0);opacity:1}
+  35%{transform:translate(-28px,-6px);opacity:.45}
+  100%{transform:translate(0,0);opacity:1}
+}
+@keyframes ff-flash-pulse{
+  0%{opacity:0}
+  30%{opacity:1}
+  100%{opacity:0}
+}
+@media (max-width:380px){
+  .ff-arena{height:180px}
+  .ff-boss{width:96px;height:110px;left:6px;top:22px}
+  .ff-hero{width:100px;height:116px;right:6px;bottom:14px}
+}
+@media (prefers-reduced-motion:reduce){
+  .ff-sprite{animation:none!important}
+  .ff-flash{animation:none!important;opacity:0!important}
+}
 
 /* ---------- Pull to refresh ---------- */
 .ptr{position:fixed;left:0;right:0;top:0;z-index:90;display:flex;justify-content:center;pointer-events:none;padding-top:calc(var(--sat) + 6px);opacity:0;transform:translateY(calc(var(--ptr, 0) * 56px - 40px));transition:opacity .15s ease}
