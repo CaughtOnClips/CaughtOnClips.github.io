@@ -211,17 +211,20 @@ button.card{width:100%;text-align:left;cursor:pointer;font:inherit}
 
 /* ---------- Rank Battle (classic FF side-view) ---------- */
 .hero-status-art{width:56px;height:56px;border-radius:12px;object-fit:cover;object-position:center top;border:2px solid rgba(58,184,255,.45);box-shadow:0 0 14px rgba(58,184,255,.25);flex:0 0 auto;background:var(--color-surface-2)}
-.log-hero{padding:0;overflow:hidden;margin-bottom:14px}
-.log-hero__frame{position:relative;min-height:200px;max-height:280px;background:
-  radial-gradient(ellipse 80% 60% at 50% 100%, rgba(255,120,40,.2), transparent 55%),
-  linear-gradient(180deg,#140e0c,#2a1810 55%,#1a100c)}
-.log-hero__art{display:block;width:100%;height:240px;object-fit:cover;object-position:center 18%;filter:saturate(1.05)}
-.log-hero__fade{position:absolute;inset:auto 0 0 0;height:55%;background:linear-gradient(180deg,transparent,rgba(8,6,10,.92));pointer-events:none}
-.log-hero__meta{position:absolute;left:14px;right:14px;bottom:12px;z-index:1}
-.log-hero__kicker{font:700 11px/1 var(--font-display,var(--font-display-fb));letter-spacing:.18em;text-transform:uppercase;color:var(--color-glow);margin-bottom:4px;text-shadow:var(--text-glow)}
-.log-hero__meta b{display:block;font:700 22px/1.15 var(--font-display,var(--font-display-fb));letter-spacing:.06em;text-transform:uppercase;color:var(--color-heading);text-shadow:var(--text-glow)}
-.log-hero__meta small{display:block;margin-top:4px;font:500 12px var(--font-mono,monospace);color:var(--color-text-muted)}
-@media (max-width:380px){.log-hero__art{height:200px}.log-hero__frame{max-height:240px}}
+.log-hero{padding:0;overflow:hidden;margin-bottom:16px;border:1px solid rgba(255,140,60,.22);box-shadow:inset 0 0 40px rgba(0,0,0,.35),var(--glow)}
+.log-hero__frame{position:relative;min-height:340px;max-height:420px;background:
+  radial-gradient(ellipse 70% 45% at 50% 88%, rgba(255,110,40,.28), transparent 58%),
+  radial-gradient(ellipse 50% 40% at 70% 20%, rgba(58,184,255,.08), transparent 50%),
+  linear-gradient(180deg,#0a0809 0%,#1a100c 42%,#2a1610 72%,#120c0a 100%)}
+.log-hero__art{display:block;width:100%;height:380px;object-fit:cover;object-position:center 12%;filter:saturate(1.08) contrast(1.04);image-rendering:auto}
+.log-hero__fade{position:absolute;inset:0;background:
+  linear-gradient(90deg,rgba(8,6,10,.55) 0%,transparent 28%,transparent 72%,rgba(8,6,10,.4) 100%),
+  linear-gradient(180deg,rgba(8,6,10,.35) 0%,transparent 28%,transparent 48%,rgba(8,6,10,.88) 78%,rgba(6,4,8,.96) 100%);pointer-events:none}
+.log-hero__meta{position:absolute;left:16px;right:16px;bottom:16px;z-index:1;padding:10px 0 0}
+.log-hero__kicker{font:700 11px/1 var(--font-display,var(--font-display-fb));letter-spacing:.2em;text-transform:uppercase;color:var(--color-glow);margin-bottom:6px;text-shadow:var(--text-glow)}
+.log-hero__meta b{display:block;font:700 26px/1.1 var(--font-display,var(--font-display-fb));letter-spacing:.08em;text-transform:uppercase;color:var(--color-heading);text-shadow:0 0 18px rgba(58,184,255,.35),var(--text-glow)}
+.log-hero__meta small{display:block;margin-top:6px;font:600 13px var(--font-mono,monospace);color:var(--color-text-muted);letter-spacing:.04em}
+@media (max-width:380px){.log-hero__art{height:320px}.log-hero__frame{min-height:280px;max-height:340px}.log-hero__meta b{font-size:22px}}
 .battle-card{position:relative;display:block;background:var(--color-window);border:var(--border-width) solid var(--border-color);border-radius:var(--radius-window);box-shadow:var(--glow);padding:14px 14px 12px;margin-top:12px}
 .battle-card.locked{opacity:.72}
 .battle-card.cleared{border-color:rgba(80,220,160,.35)}
@@ -246,7 +249,7 @@ button.card{width:100%;text-align:left;cursor:pointer;font:inherit}
 .ff-boss{left:10px;top:28px}
 .ff-boss .ff-sprite__img{border-color:rgba(255,120,60,.4);transform:scaleX(-1)}
 .ff-hero{right:10px;bottom:18px;width:118px;height:136px}
-.ff-hero .ff-sprite__img{border-color:rgba(58,184,255,.5);box-shadow:0 8px 22px rgba(58,184,255,.2),0 8px 20px rgba(0,0,0,.45)}
+.ff-hero .ff-sprite__img{border-color:rgba(58,184,255,.5);box-shadow:0 8px 22px rgba(58,184,255,.2),0 8px 20px rgba(0,0,0,.45);background-size:cover;background-position:center 20%;image-rendering:pixelated}
 .ff-flash{position:absolute;inset:0;border-radius:10px;pointer-events:none;opacity:0;mix-blend-mode:screen}
 .ff-hud .battle-side{margin-bottom:10px}
 .battle-side.enemy .battle-name{color:var(--color-accent)}
@@ -266,49 +269,58 @@ button.card{width:100%;text-align:left;cursor:pointer;font:inherit}
 .battle-specials .btn{width:100%;min-height:48px;font-size:12px;letter-spacing:.06em;padding:8px 10px}
 .battle-actions .btn:disabled,.battle-specials .btn:disabled{opacity:.45;cursor:not-allowed}
 
-/* Action keyframes — short CSS motion, not sprite sheets */
-.ff-hero.is-attack{animation:ff-hero-lunge .52s ease-out}
-.ff-hero.is-special{animation:ff-hero-special .62s ease-out}
-.ff-hero.is-defend{animation:ff-hero-guard .45s ease}
-.ff-hero.is-dodge{animation:ff-dodge .48s ease}
-.ff-hero.is-hurt{animation:ff-hurt-hero .56s ease}
+/* Clash motion — sprites dash across arena, meet, return */
+.ff-hero{--clash-x:-168px}
+.ff-boss{--clash-x:168px}
+.ff-hero.is-attack,.ff-hero.is-clash-out{animation:ff-hero-clash .7s cubic-bezier(.2,.7,.2,1)}
+.ff-hero.is-special{animation:ff-hero-clash-special .78s cubic-bezier(.15,.75,.2,1)}
+.ff-hero.is-defend{animation:ff-hero-guard .48s ease}
+.ff-hero.is-dodge{animation:ff-dodge .5s ease}
+.ff-hero.is-hurt{animation:ff-hurt-hero .55s ease .3s both}
 .ff-hero.has-guard .ff-sprite__img{filter:brightness(1.08) saturate(1.1);box-shadow:0 0 16px rgba(120,220,255,.45),0 8px 20px rgba(0,0,0,.45)}
-.ff-boss.is-attack{animation:ff-boss-lunge .56s ease-out}
+.ff-boss.is-attack,.ff-boss.is-clash-out{animation:ff-boss-clash .7s cubic-bezier(.2,.7,.2,1)}
 .ff-boss.is-defend{animation:ff-boss-guard .42s ease}
-.ff-boss.is-dodge{animation:ff-dodge-boss .48s ease}
-.ff-boss.is-hurt{animation:ff-hurt-boss .4s ease}
+.ff-boss.is-dodge{animation:ff-dodge-boss .5s ease .28s both}
+.ff-boss.is-hurt{animation:ff-hurt-boss .42s ease .3s both}
 .ff-boss.has-guard .ff-sprite__img{filter:brightness(1.05);box-shadow:0 0 14px rgba(255,180,80,.35),0 8px 20px rgba(0,0,0,.45)}
-.ff-hero.is-special .ff-flash,.ff-stage.flash-ember .ff-hero.is-special .ff-flash,.ff-stage.flash-ember .ff-boss.is-hurt .ff-flash{opacity:1;background:radial-gradient(circle,rgba(255,140,40,.7),transparent 70%);animation:ff-flash-pulse .5s ease}
-.ff-stage.flash-volt .ff-hero.is-special .ff-flash,.ff-stage.flash-volt .ff-boss.is-hurt .ff-flash{opacity:1;background:radial-gradient(circle,rgba(80,200,255,.75),transparent 70%);animation:ff-flash-pulse .5s ease}
-.ff-stage.flash-burn .ff-hero.is-special .ff-flash,.ff-stage.flash-burn .ff-boss.is-hurt .ff-flash{opacity:1;background:radial-gradient(circle,rgba(255,80,40,.7),transparent 70%);animation:ff-flash-pulse .5s ease}
+.ff-arena.is-impact{animation:ff-arena-shake .38s ease .28s both}
+.ff-hero.is-special .ff-flash,.ff-stage.flash-ember .ff-hero.is-special .ff-flash,.ff-stage.flash-ember .ff-boss.is-hurt .ff-flash{opacity:1;background:radial-gradient(circle,rgba(255,140,40,.7),transparent 70%);animation:ff-flash-pulse .55s ease .28s both}
+.ff-stage.flash-volt .ff-hero.is-special .ff-flash,.ff-stage.flash-volt .ff-boss.is-hurt .ff-flash{opacity:1;background:radial-gradient(circle,rgba(80,200,255,.75),transparent 70%);animation:ff-flash-pulse .55s ease .28s both}
+.ff-stage.flash-burn .ff-hero.is-special .ff-flash,.ff-stage.flash-burn .ff-boss.is-hurt .ff-flash{opacity:1;background:radial-gradient(circle,rgba(255,80,40,.7),transparent 70%);animation:ff-flash-pulse .55s ease .28s both}
 .ff-stage.flash-heal .ff-hero.is-defend .ff-flash,.ff-stage.flash-guard .ff-hero.is-defend .ff-flash{opacity:1;background:radial-gradient(circle,rgba(100,255,180,.65),transparent 70%);animation:ff-flash-pulse .45s ease}
 .ff-hero.is-defend .ff-flash{opacity:1;background:radial-gradient(circle,rgba(140,210,255,.55),transparent 70%);animation:ff-flash-pulse .4s ease}
-.ff-boss.is-hurt .ff-flash{opacity:1;background:radial-gradient(circle,rgba(255,220,120,.8),transparent 65%);animation:ff-flash-pulse .35s ease}
-.ff-hero.is-hurt .ff-flash{opacity:1;background:radial-gradient(circle,rgba(255,60,60,.75),transparent 65%);animation:ff-flash-pulse .4s ease}
+.ff-boss.is-hurt .ff-flash{opacity:1;background:radial-gradient(circle,rgba(255,220,120,.85),transparent 65%);animation:ff-flash-pulse .4s ease .3s both}
+.ff-hero.is-hurt .ff-flash{opacity:1;background:radial-gradient(circle,rgba(255,60,60,.75),transparent 65%);animation:ff-flash-pulse .42s ease .3s both}
+.ff-hero.is-attack .ff-sprite__img,.ff-hero.is-special .ff-sprite__img{image-rendering:pixelated}
 
-@keyframes ff-hero-lunge{
-  0%{transform:translate(0,0)}
-  35%{transform:translate(-54px,-6px) scale(1.04)}
-  55%{transform:translate(-48px,-4px)}
-  100%{transform:translate(0,0)}
+@keyframes ff-hero-clash{
+  0%{transform:translate3d(0,0,0) scale(1)}
+  12%{transform:translate3d(-18px,-4px,0) scale(1.02)}
+  40%{transform:translate3d(var(--clash-x),-10px,0) scale(1.08)}
+  48%{transform:translate3d(calc(var(--clash-x) + 10px),-4px,0) scale(1.1)}
+  62%{transform:translate3d(calc(var(--clash-x) * .55),-2px,0) scale(1.04)}
+  100%{transform:translate3d(0,0,0) scale(1)}
 }
-@keyframes ff-hero-special{
-  0%{transform:translate(0,0) scale(1);filter:brightness(1)}
-  25%{transform:translate(-20px,-10px) scale(1.06);filter:brightness(1.25)}
-  45%{transform:translate(-68px,-8px) scale(1.1);filter:brightness(1.35)}
-  70%{transform:translate(-40px,-4px)}
-  100%{transform:translate(0,0) scale(1);filter:brightness(1)}
+@keyframes ff-hero-clash-special{
+  0%{transform:translate3d(0,0,0) scale(1);filter:brightness(1)}
+  10%{transform:translate3d(-24px,-12px,0) scale(1.05);filter:brightness(1.2)}
+  36%{transform:translate3d(calc(var(--clash-x) - 28px),-14px,0) scale(1.14);filter:brightness(1.4)}
+  46%{transform:translate3d(calc(var(--clash-x) - 8px),-6px,0) scale(1.16);filter:brightness(1.55)}
+  70%{transform:translate3d(calc(var(--clash-x) * .4),-2px,0);filter:brightness(1.15)}
+  100%{transform:translate3d(0,0,0) scale(1);filter:brightness(1)}
 }
 @keyframes ff-hero-guard{
-  0%{transform:scale(1)}
-  40%{transform:scale(1.06) translateY(-4px);filter:brightness(1.2) drop-shadow(0 0 8px rgba(120,220,255,.8))}
-  100%{transform:scale(1.03);filter:brightness(1.08)}
+  0%{transform:scale(1) translateX(0)}
+  35%{transform:scale(1.08) translate(-6px,-6px);filter:brightness(1.25) drop-shadow(0 0 10px rgba(120,220,255,.85))}
+  100%{transform:scale(1.04) translate(-2px,0);filter:brightness(1.1)}
 }
-@keyframes ff-boss-lunge{
-  0%{transform:translate(0,0)}
-  35%{transform:translate(54px,-4px) scale(1.04)}
-  55%{transform:translate(46px,-2px)}
-  100%{transform:translate(0,0)}
+@keyframes ff-boss-clash{
+  0%{transform:translate3d(0,0,0) scale(1)}
+  12%{transform:translate3d(16px,-3px,0) scale(1.02)}
+  40%{transform:translate3d(var(--clash-x),-8px,0) scale(1.07)}
+  48%{transform:translate3d(calc(var(--clash-x) - 10px),-3px,0) scale(1.09)}
+  62%{transform:translate3d(calc(var(--clash-x) * .55),-1px,0) scale(1.03)}
+  100%{transform:translate3d(0,0,0) scale(1)}
 }
 @keyframes ff-boss-guard{
   0%{transform:scale(1)}
@@ -316,40 +328,50 @@ button.card{width:100%;text-align:left;cursor:pointer;font:inherit}
   100%{transform:scale(1.02)}
 }
 @keyframes ff-hurt-boss{
-  0%{transform:translate(0,0);filter:none}
-  20%{transform:translate(-10px,2px);filter:brightness(1.6) saturate(1.4)}
-  40%{transform:translate(8px,-2px);filter:brightness(2)}
-  60%{transform:translate(-6px,1px)}
-  100%{transform:translate(0,0);filter:none}
+  0%{transform:translate3d(0,0,0);filter:none}
+  25%{transform:translate3d(-14px,3px,0);filter:brightness(1.7) saturate(1.5)}
+  50%{transform:translate3d(10px,-3px,0);filter:brightness(2.1)}
+  75%{transform:translate3d(-8px,2px,0)}
+  100%{transform:translate3d(0,0,0);filter:none}
 }
 @keyframes ff-hurt-hero{
-  0%{transform:translate(0,0);filter:none}
-  25%{transform:translate(12px,2px);filter:brightness(1.4) sepia(.4) hue-rotate(-40deg)}
-  50%{transform:translate(-8px,0);filter:brightness(1.8) sepia(.5) hue-rotate(-50deg)}
-  100%{transform:translate(0,0);filter:none}
+  0%{transform:translate3d(0,0,0);filter:none}
+  25%{transform:translate3d(14px,3px,0);filter:brightness(1.45) sepia(.4) hue-rotate(-40deg)}
+  50%{transform:translate3d(-10px,0,0);filter:brightness(1.85) sepia(.5) hue-rotate(-50deg)}
+  100%{transform:translate3d(0,0,0);filter:none}
 }
 @keyframes ff-dodge{
-  0%{transform:translate(0,0);opacity:1}
-  35%{transform:translate(28px,-8px);opacity:.45}
-  100%{transform:translate(0,0);opacity:1}
+  0%{transform:translate3d(0,0,0);opacity:1}
+  40%{transform:translate3d(36px,-10px,0);opacity:.4}
+  100%{transform:translate3d(0,0,0);opacity:1}
 }
 @keyframes ff-dodge-boss{
-  0%{transform:translate(0,0);opacity:1}
-  35%{transform:translate(-28px,-6px);opacity:.45}
-  100%{transform:translate(0,0);opacity:1}
+  0%{transform:translate3d(0,0,0);opacity:1}
+  40%{transform:translate3d(-36px,-8px,0);opacity:.4}
+  100%{transform:translate3d(0,0,0);opacity:1}
 }
 @keyframes ff-flash-pulse{
   0%{opacity:0}
   30%{opacity:1}
   100%{opacity:0}
 }
+@keyframes ff-arena-shake{
+  0%,100%{transform:translate3d(0,0,0)}
+  25%{transform:translate3d(-5px,2px,0)}
+  50%{transform:translate3d(6px,-2px,0)}
+  75%{transform:translate3d(-3px,1px,0)}
+}
 @media (max-width:380px){
   .ff-arena{height:180px}
-  .ff-boss{width:96px;height:110px;left:6px;top:22px}
-  .ff-hero{width:100px;height:116px;right:6px;bottom:14px}
+  .ff-boss{width:96px;height:110px;left:6px;top:22px;--clash-x:132px}
+  .ff-hero{width:100px;height:116px;right:6px;bottom:14px;--clash-x:-132px}
+}
+@media (min-width:420px){
+  .ff-hero{--clash-x:-196px}
+  .ff-boss{--clash-x:196px}
 }
 @media (prefers-reduced-motion:reduce){
-  .ff-sprite{animation:none!important}
+  .ff-sprite,.ff-arena{animation:none!important}
   .ff-flash{animation:none!important;opacity:0!important}
 }
 

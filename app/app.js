@@ -595,10 +595,10 @@ VIEWS.history = () => {
   app.innerHTML = `${hudTop()}
     <div class="system-window log-hero">
       <div class="log-hero__frame">
-        <img class="log-hero__art" src="${GM.HERO_ART}" alt="Hardgrain main character" width="320" height="360" decoding="async">
+        <img class="log-hero__art" src="${GM.HERO_SHOWCASE_ART || GM.HERO_ART}" alt="Hardgrain main character" width="390" height="520" decoding="async">
         <div class="log-hero__fade"></div>
         <div class="log-hero__meta">
-          <div class="log-hero__kicker">Lifter log</div>
+          <div class="log-hero__kicker">Appearance</div>
           <b>${h(G.name || "Lifter")}</b>
           <small>LV ${G.level} · Rank ${r.k} ${r.name} · ${h(G.title)}</small>
         </div>
@@ -917,64 +917,59 @@ function applyPlayerAction(act, move) {
   }
   return result;
 }
-const ANIM_MS = { attack: 520, special: 620, defend: 450, miss: 480, "e-attack": 560, "e-defend": 420, "e-miss": 480 };
+const ANIM_MS = { attack: 700, special: 780, defend: 480, miss: 700, "e-attack": 700, "e-defend": 420, "e-miss": 500, "e-windup": 180 };
+function runEnemyPhase() {
+  if (!fight || fight.over) { if (fight) { clearAnim(); fight.busy = false; renderFight(); } return; }
+  setAnim("e-windup", null);
+  renderFight();
+  setTimeout(() => {
+    if (!fight || fight.over) return;
+    const er = enemyTurn();
+    tickAfterEnemy();
+    if (er.kind === "e-defend") setAnim("e-defend", null);
+    else if (er.kind === "e-miss") setAnim("e-miss", null);
+    else setAnim("e-attack", null);
+    renderFight();
+    const tE = ANIM_MS[er.kind] || 700;
+    setTimeout(() => {
+      if (!fight) return;
+      clearAnim();
+      fight.busy = false;
+      renderFight();
+      if (fight.over === "win") showQueue();
+    }, tE);
+  }, ANIM_MS["e-windup"]);
+}
 function resolvePlayerAction(act, move) {
   if (!fight || fight.over || fight.busy) return;
   if (act === "special" && move && fight.p.stam < move.cost) { toast("Not enough stamina"); return; }
   fight.busy = true;
-  // Preview anim before resolving hit so the lunge reads first
-  let preview = act === "defend" ? "defend" : act === "special" ? "special" : "attack";
-  let flash = null;
-  if (act === "special" && move) {
-    flash = move.kind === "heal" || move.kind === "cleanse" ? "heal"
-      : move.kind === "defend+" ? "guard"
-      : move.kind === "dot" ? "burn"
-      : move.kind === "multi" ? "volt"
-      : "ember";
-    if (move.kind === "defend+") preview = "defend";
-    if (move.kind === "heal" || move.kind === "cleanse") preview = "defend";
-  }
-  setAnim(preview, flash);
+  // Resolve first so one continuous clash render shows travel + delayed impact (no mid-dash DOM restart)
+  const result = applyPlayerAction(act, move);
+  if (!result) { clearAnim(); fight.busy = false; renderFight(); return; }
+  let anim = "attack";
+  let flash = result.flash || null;
+  const homePose = result.kind === "defend" || flash === "heal" || flash === "guard";
+  if (homePose) anim = "defend";
+  else if (result.miss) anim = "miss";
+  else if (result.kind === "special") anim = result.hit ? "special-hit" : "special";
+  else if (result.hit) anim = "attack-hit";
+  else anim = "attack";
+  setAnim(anim, flash);
   renderFight();
-  const t0 = ANIM_MS[preview] || 520;
+  const tClash = homePose ? ANIM_MS.defend
+    : (result.kind === "special" && !result.miss ? ANIM_MS.special
+    : result.miss ? ANIM_MS.miss
+    : ANIM_MS.attack);
   setTimeout(() => {
     if (!fight) return;
-    const result = applyPlayerAction(act, move);
-    if (!result) { clearAnim(); fight.busy = false; renderFight(); return; }
-    if (result.miss) setAnim("miss", null);
-    else if (result.hit && (result.kind === "attack" || result.kind === "special")) setAnim(result.kind === "special" ? "special-hit" : "attack-hit", result.flash);
-    else setAnim(result.kind === "defend" ? "defend" : preview, result.flash);
-    renderFight();
     if (fight.e.hp <= 0) {
       finishWin();
-      setTimeout(() => { if (!fight) return; clearAnim(); fight.busy = false; renderFight(); showQueue(); }, 380);
+      setTimeout(() => { if (!fight) return; clearAnim(); fight.busy = false; renderFight(); showQueue(); }, 360);
       return;
     }
-    const gap = result.miss ? 420 : 280;
-    setTimeout(() => {
-      if (!fight || fight.over) { if (fight) { clearAnim(); fight.busy = false; renderFight(); } return; }
-      // Enemy telegraph
-      setAnim("e-windup", null);
-      renderFight();
-      setTimeout(() => {
-        if (!fight || fight.over) return;
-        const er = enemyTurn();
-        tickAfterEnemy();
-        if (er.kind === "e-defend") setAnim("e-defend", null);
-        else if (er.kind === "e-miss") setAnim("e-miss", null);
-        else setAnim("e-attack", null);
-        renderFight();
-        const tE = ANIM_MS[er.kind] || 520;
-        setTimeout(() => {
-          if (!fight) return;
-          clearAnim();
-          fight.busy = false;
-          renderFight();
-          if (fight.over === "win") showQueue();
-        }, tE);
-      }, 220);
-    }, gap);
-  }, t0);
+    runEnemyPhase();
+  }, tClash);
 }
 function hpBar(cur, max, cls) {
   const pct = Math.max(0, Math.min(100, (cur / Math.max(1, max)) * 100));
@@ -987,14 +982,17 @@ function renderFight() {
   const over = fight.over, busy = !!fight.busy, anim = fight.anim || "";
   const bossArt = fight.bossArt || (GM.BOSS_ART_FALLBACK && GM.BOSS_ART_FALLBACK[0]) || "";
   const flash = fight.animFlash ? ` flash-${fight.animFlash}` : "";
-  const heroCls = ["ff-sprite", "ff-hero", anim === "attack" || anim === "attack-hit" ? "is-attack" : "",
+  const clashHit = anim === "attack-hit" || anim === "special-hit" || anim === "e-attack";
+  const heroCls = ["ff-sprite", "ff-hero",
+    anim === "attack" || anim === "attack-hit" ? "is-attack" : "",
     anim === "special" || anim === "special-hit" ? "is-special" : "",
     anim === "defend" ? "is-defend" : "",
-    anim === "miss" ? "is-dodge" : "",
+    anim === "miss" ? "is-attack" : "",
     anim === "e-attack" ? "is-hurt" : "",
     anim === "e-miss" ? "is-dodge" : "",
     P.defending || P.guardTurns ? "has-guard" : ""].filter(Boolean).join(" ");
-  const bossCls = ["ff-sprite", "ff-boss", anim === "attack-hit" || anim === "special-hit" ? "is-hurt" : "",
+  const bossCls = ["ff-sprite", "ff-boss",
+    anim === "attack-hit" || anim === "special-hit" ? "is-hurt" : "",
     anim === "e-attack" || anim === "e-windup" ? "is-attack" : "",
     anim === "e-defend" ? "is-defend" : "",
     anim === "e-miss" ? "is-dodge" : "",
@@ -1002,10 +1000,10 @@ function renderFight() {
     E.defending ? "has-guard" : ""].filter(Boolean).join(" ");
   app.innerHTML = `<div class="top"><button class="iconbtn" id="bback" aria-label="Back" ${busy && !over ? "disabled" : ""}>‹</button><h1 style="margin:0;font-size:20px">Rank Battle</h1></div>
     <div class="battle-stage system-window ff-stage${flash}">
-      <div class="ff-arena" aria-hidden="true">
+      <div class="ff-arena${clashHit ? " is-impact" : ""}" aria-hidden="true">
         <div class="ff-floor"></div>
         <div class="${bossCls}" style="--sprite:url('${bossArt}')"><div class="ff-sprite__img"></div><div class="ff-flash"></div></div>
-        <div class="${heroCls}" style="--sprite:url('${GM.HERO_ART}')"><div class="ff-sprite__img"></div><div class="ff-flash"></div></div>
+        <div class="${heroCls}" style="--sprite:url('${GM.HERO_BATTLE_ART || GM.HERO_ART}')"><div class="ff-sprite__img"></div><div class="ff-flash"></div></div>
       </div>
       <div class="ff-hud">
         <div class="battle-side enemy"><div class="battle-name">${h(fight.bossName)}${fight.human ? " · Rival" : ""}</div>${hpBar(E.hp, E.maxHp, "enemy")}</div>
