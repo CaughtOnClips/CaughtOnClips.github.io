@@ -591,8 +591,20 @@ VIEWS.summary = () => {
 
 VIEWS.history = () => {
   setTabs("history"); const st = stats();
-  app.innerHTML = `<h1>History</h1>
-    <div class="stats"><div class="stat hl"><div class="v">${S.game.streak}</div><div class="l">Streak (days)</div></div><div class="stat"><div class="v">${S.game.totalXp.toLocaleString()}</div><div class="l">Total XP</div></div>
+  const G = S.game, r = curRank();
+  app.innerHTML = `${hudTop()}
+    <div class="system-window log-hero">
+      <div class="log-hero__frame">
+        <img class="log-hero__art" src="${GM.HERO_ART}" alt="Hardgrain main character" width="320" height="360" decoding="async">
+        <div class="log-hero__fade"></div>
+        <div class="log-hero__meta">
+          <div class="log-hero__kicker">Lifter log</div>
+          <b>${h(G.name || "Lifter")}</b>
+          <small>LV ${G.level} · Rank ${r.k} ${r.name} · ${h(G.title)}</small>
+        </div>
+      </div>
+    </div>
+    <div class="stats"><div class="stat hl"><div class="v">${G.streak}</div><div class="l">Streak (days)</div></div><div class="stat"><div class="v">${G.totalXp.toLocaleString()}</div><div class="l">Total XP</div></div>
     <div class="stat"><div class="v">${st.total}</div><div class="l">Workouts done</div></div><div class="stat"><div class="v">${st.minutes}</div><div class="l">Total minutes</div></div>
     <div class="stat" style="grid-column:span 2"><div class="v">${st.thisWeek}</div><div class="l">Workouts this week</div></div></div>
     ${weekStrip()}
