@@ -1,8 +1,8 @@
 // Service worker: offline app shell + runtime cache for fonts.
-const VERSION = "hg-v15";
+const VERSION = "hg-v16";
 const SHELL = ["./", "index.html", "hardgrain-theme.css", "theme.css", "app.css", "app.js", "config.js", "plans.js", "game.js", "manifest.webmanifest",
   "icons/apple-touch-icon.png", "icons/icon-192.png", "icons/icon-512.png", "icons/favicon-32.png", "icons/mark.svg", "sounds/skill-unlock.mp3",
-  "battle/hero.jpg", "battle/hero-pixel.jpg", "battle/bosses/ember-whelp.jpg", "battle/bosses/scrap-hound.jpg", "battle/bosses/cinder-boar.jpg", "battle/bosses/anvil-beetle.jpg", "battle/bosses/rust-serpent.jpg", "battle/bosses/coal-golem.jpg", "battle/bosses/brass-lynx.jpg", "battle/bosses/forge-drake.jpg", "battle/bosses/ironback.jpg", "battle/bosses/slag-wyrm.jpg", "battle/bosses/temper-sphinx.jpg", "battle/bosses/quench-leviathan.jpg", "battle/bosses/iron-warden.jpg", "battle/bosses/slag-pugilist.jpg",
+  "battle/hero.jpg", "battle/hero-pixel.jpg", "battle/fight-clash-poster.jpg", "battle/bosses/ember-whelp.jpg", "battle/bosses/scrap-hound.jpg", "battle/bosses/cinder-boar.jpg", "battle/bosses/anvil-beetle.jpg", "battle/bosses/rust-serpent.jpg", "battle/bosses/coal-golem.jpg", "battle/bosses/brass-lynx.jpg", "battle/bosses/forge-drake.jpg", "battle/bosses/ironback.jpg", "battle/bosses/slag-wyrm.jpg", "battle/bosses/temper-sphinx.jpg", "battle/bosses/quench-leviathan.jpg", "battle/bosses/iron-warden.jpg", "battle/bosses/slag-pugilist.jpg",
   "/", "/index.html", "/privacy.html", "/terms.html", "/support.html", "/styles.css", "/icon.png", "/hardgrain-theme.css", "/hardgrain-mark.svg"];
 self.addEventListener("install", e => {
   e.waitUntil(caches.open(VERSION).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));

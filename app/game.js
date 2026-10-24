@@ -185,7 +185,7 @@ function makeBoss(i) {
   const unlock = battleUnlockLevel(i);
   if (i < BOSSES_HAND.length) {
     const b = BOSSES_HAND[i];
-    return Object.assign({ unlock, idx: i, xpClear: 40 + unlock * 8, xpRematch: 12 + unlock * 2 }, b);
+    return Object.assign({ unlock, idx: i, xpClear: 40 + unlock * 8, xpRematch: 0 }, b);
   }
   const rnd = _seed(i * 9973 + 17);
   const name = BOSS_PREFIX[Math.floor(rnd() * BOSS_PREFIX.length)] + " " + BOSS_SUFFIX[Math.floor(rnd() * BOSS_SUFFIX.length)];
@@ -196,7 +196,7 @@ function makeBoss(i) {
   const def = Math.round(5 + tier * 1.05 + rnd() * 5);
   const id = "forge-" + i;
   const art = BOSS_ART_FALLBACK[i % BOSS_ART_FALLBACK.length];
-  return { id, name, blurb: "A forge-born challenger scaled to your climb.", hp, atk, def, art, unlock, idx: i, xpClear: 40 + unlock * 8, xpRematch: 12 + unlock * 2 };
+  return { id, name, blurb: "A forge-born challenger scaled to your climb.", hp, atk, def, art, unlock, idx: i, xpClear: 40 + unlock * 8, xpRematch: 0 };
 }
 function bossById(id) {
   if (!id) return null;
