@@ -828,7 +828,6 @@ function playFightClip(clipKey) {
       clearTimeout(tid);
       if (v) {
         v.removeEventListener("ended", onEnded);
-        v.classList.remove("is-playing");
         try { v.pause(); if (v.currentTime) v.currentTime = 0; } catch (_) {}
       }
       resolve();
@@ -847,7 +846,6 @@ function playFightClip(clipKey) {
       } else {
         try { v.currentTime = 0; } catch (_) {}
       }
-      v.classList.add("is-playing");
       v.addEventListener("ended", onEnded);
       const p = v.play();
       if (p && typeof p.then === "function") p.catch(() => finish());
@@ -986,35 +984,24 @@ function applyPlayerAction(act, move) {
 }
 function runEnemyPhase() {
   if (!fight || fight.over) { if (fight) { clearAnim(); fight.busy = false; renderFight(); } return; }
-  // Sprite wind-up + keep clip timing for pacing (video FX behind sprites)
-  setAnim("e-windup", null);
-  renderFight();
+  // Enemy-turn FX clip, then resolve damage
   playFightClip("enemy").then(() => {
     if (!fight) return;
     if (fight.over) { fight.busy = false; clearAnim(); renderFight(); return; }
-    const er = enemyTurn();
+    enemyTurn();
     tickAfterEnemy();
-    if (er.kind === "e-defend") setAnim("e-defend", null);
-    else if (er.kind === "e-miss") setAnim("e-miss", null);
-    else setAnim("e-attack", null);
+    clearAnim();
+    fight.busy = false;
     renderFight();
-    setTimeout(() => {
-      if (!fight) return;
-      clearAnim();
-      fight.busy = false;
-      renderFight();
-      if (fight.over === "win") showQueue();
-    }, 420);
+    if (fight.over === "win") showQueue();
   });
 }
 function resolvePlayerAction(act, move) {
   if (!fight || fight.over || fight.busy) return;
   if (act === "special" && move && fight.p.stam < move.cost) { toast("Not enough stamina"); return; }
   fight.busy = true;
-  // Preview clash pose on sprites while clip runs for timing
-  let preview = act === "defend" ? "defend" : (act === "special" ? "special" : "attack");
-  setAnim(preview, act === "special" && move ? (move.kind === "heal" || move.kind === "cleanse" ? "heal" : move.kind === "defend+" ? "guard" : move.kind === "dot" ? "burn" : move.kind === "multi" ? "volt" : "ember") : null);
-  renderFight();
+  renderFight(); // disable buttons; keep video stage visible
+  // Start command-mapped clip on the same user tap (iOS muted autoplay unlock)
   let clipKey = act === "special" && move ? move.id : act;
   // Attack alternates punch / magic every other hit (reset per battle)
   if (clipKey === "attack") {
@@ -1025,25 +1012,16 @@ function resolvePlayerAction(act, move) {
     if (!fight) return;
     const result = applyPlayerAction(act, move);
     if (!result) { clearAnim(); fight.busy = false; renderFight(); return; }
-    let anim = "attack";
-    const flash = result.flash || null;
-    const homePose = result.kind === "defend" || flash === "heal" || flash === "guard";
-    if (homePose) anim = "defend";
-    else if (result.miss) anim = "miss";
-    else if (result.kind === "special") anim = result.hit ? "special-hit" : "special";
-    else if (result.hit) anim = "attack-hit";
-    setAnim(anim, flash);
+    clearAnim();
     renderFight();
     if (fight.e.hp <= 0) {
       finishWin();
-      setTimeout(() => { if (!fight) return; clearAnim(); fight.busy = false; renderFight(); showQueue(); }, 360);
+      fight.busy = false;
+      renderFight();
+      showQueue();
       return;
     }
-    setTimeout(() => {
-      if (!fight) return;
-      clearAnim();
-      runEnemyPhase();
-    }, 280);
+    runEnemyPhase();
   });
 }
 function hpBar(cur, max, cls) {
@@ -1054,39 +1032,16 @@ function renderFight() {
   if (!fight) return go("/battle");
   setTabs(null);
   const P = fight.p, E = fight.e, moves = GM.battleMoves(S.game.skills);
-  const over = fight.over, busy = !!fight.busy, anim = fight.anim || "";
-  const bossArt = fight.bossArt || (GM.BOSS_ART_FALLBACK && GM.BOSS_ART_FALLBACK[0]) || "";
-  const heroArt = (GM.heroBattleArt && GM.heroBattleArt(S.game)) || GM.HERO_BATTLE_ART || GM.HERO_ART;
-  const heroName = ((GM.activeHero && GM.activeHero(S.game)) || {}).name || S.game.name || "Lifter";
+  const over = fight.over, busy = !!fight.busy;
   const idle = (GM.battleVideoFor && GM.battleVideoFor("idle")) || { src: "battle/fight-clash.mp4", poster: "battle/fight-clash-poster.jpg" };
-  const flash = fight.animFlash ? ` flash-${fight.animFlash}` : "";
-  const clashHit = anim === "attack-hit" || anim === "special-hit" || anim === "e-attack";
-  const heroCls = ["ff-sprite", "ff-hero",
-    anim === "attack" || anim === "attack-hit" ? "is-attack" : "",
-    anim === "special" || anim === "special-hit" ? "is-special" : "",
-    anim === "defend" ? "is-defend" : "",
-    anim === "miss" ? "is-attack" : "",
-    anim === "e-attack" ? "is-hurt" : "",
-    anim === "e-miss" ? "is-dodge" : "",
-    P.defending || P.guardTurns ? "has-guard" : ""].filter(Boolean).join(" ");
-  const bossCls = ["ff-sprite", "ff-boss",
-    anim === "attack-hit" || anim === "special-hit" ? "is-hurt" : "",
-    anim === "e-attack" || anim === "e-windup" ? "is-attack" : "",
-    anim === "e-defend" ? "is-defend" : "",
-    anim === "e-miss" ? "is-dodge" : "",
-    anim === "miss" ? "is-dodge" : "",
-    E.defending ? "has-guard" : ""].filter(Boolean).join(" ");
   app.innerHTML = `<div class="top"><button class="iconbtn" id="bback" aria-label="Back" ${busy && !over ? "disabled" : ""}>‹</button><h1 style="margin:0;font-size:20px">Rank Battle</h1></div>
-    <div class="battle-stage system-window ff-stage${flash}">
-      <div class="ff-arena${clashHit ? " is-impact" : ""}" aria-hidden="true">
-        <video id="ff-clash" class="ff-clash-video ff-clash-video--fx" src="${idle.src}" poster="${idle.poster}" playsinline webkit-playsinline muted preload="metadata" disablepictureinpicture></video>
-        <div class="ff-floor"></div>
-        <div class="${bossCls}" style="--sprite:url('${bossArt}')"><div class="ff-sprite__img"></div><div class="ff-flash"></div></div>
-        <div class="${heroCls}" style="--sprite:url('${heroArt}')"><div class="ff-sprite__img"></div><div class="ff-flash"></div></div>
+    <div class="battle-stage system-window ff-stage">
+      <div class="ff-arena" aria-hidden="true">
+        <video id="ff-clash" class="ff-clash-video" src="${idle.src}" poster="${idle.poster}" playsinline webkit-playsinline muted preload="metadata" disablepictureinpicture></video>
       </div>
       <div class="ff-hud">
         <div class="battle-side enemy"><div class="battle-name">${h(fight.bossName)}${fight.human ? " · Rival" : ""}</div>${hpBar(E.hp, E.maxHp, "enemy")}</div>
-        <div class="battle-side you"><div class="battle-name">${h(heroName)} · LV ${S.game.level}</div>${hpBar(P.hp, P.maxHp, "you")}
+        <div class="battle-side you"><div class="battle-name">${h(S.game.name || "Lifter")} · LV ${S.game.level}</div>${hpBar(P.hp, P.maxHp, "you")}
           <div class="battle-stam">Stamina ${P.stam}/${P.stamMax}${P.guardTurns ? " · Guard" : ""}${P.defending ? " · Defend" : ""}</div></div>
       </div>
       <div class="battle-log" aria-live="polite">${fight.log.map(l => `<div>${h(l)}</div>`).join("")}</div>

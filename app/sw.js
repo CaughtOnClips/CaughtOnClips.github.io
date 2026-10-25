@@ -1,5 +1,5 @@
 // Service worker: offline app shell + runtime cache for fonts.
-const VERSION = "hg-v24";
+const VERSION = "hg-v25";
 const SHELL = ["./", "index.html", "hardgrain-theme.css", "theme.css", "app.css", "app.js", "config.js", "plans.js", "game.js", "manifest.webmanifest",
   "icons/apple-touch-icon.png", "icons/icon-192.png", "icons/icon-512.png", "icons/favicon-32.png", "icons/mark.svg", "sounds/skill-unlock.mp3",
   "battle/hero.jpg", "battle/hero-pixel.jpg", "battle/chars/twist-log.jpg", "battle/chars/twist-pixel.jpg", "battle/chars/pink-log.jpg", "battle/chars/pink-pixel.jpg", "battle/chars/blue-log.jpg", "battle/chars/blue-pixel.jpg", "battle/chars/green-log.jpg", "battle/chars/green-pixel.jpg", "battle/bosses/ember-whelp.jpg", "battle/bosses/scrap-hound.jpg", "battle/bosses/cinder-boar.jpg", "battle/bosses/anvil-beetle.jpg", "battle/bosses/rust-serpent.jpg", "battle/bosses/coal-golem.jpg", "battle/bosses/brass-lynx.jpg", "battle/bosses/forge-drake.jpg", "battle/bosses/ironback.jpg", "battle/bosses/slag-wyrm.jpg", "battle/bosses/temper-sphinx.jpg", "battle/bosses/quench-leviathan.jpg", "battle/bosses/iron-warden.jpg", "battle/bosses/slag-pugilist.jpg",
