@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <title>Forge Four — Vertical Slice</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div id="wrap">
+    <div id="boot">Loading Forge Four…</div>
+    <canvas id="game" tabindex="0" aria-label="Forge Four game canvas"></canvas>
+
+    <!-- Menu / select touch UI (shown on touch or narrow) -->
+    <div id="touch-ui" aria-hidden="true">
+      <button type="button" class="tui" id="btn-start" data-ui="start" data-show="title">START</button>
+      <button type="button" class="tui" id="btn-cpu" data-ui="cpu" data-show="title select">CPU</button>
+      <button type="button" class="tui" id="btn-lock" data-ui="lock" data-show="select">LOCK</button>
+      <button type="button" class="tui" id="btn-rematch" data-ui="rematch" data-show="match">REMATCH</button>
+      <button type="button" class="tui" id="btn-select" data-ui="select" data-show="match">SELECT</button>
+      <button type="button" class="tui" id="btn-resume" data-ui="resume" data-show="pause">RESUME</button>
+    </div>
+
+    <!-- Fight touch pad — large bottom controls for P1 -->
+    <div id="touch-pad" aria-hidden="true">
+      <div class="pad-cluster pad-move">
+        <button type="button" class="pad-btn" data-action="left" data-side="p1" data-hold="1" aria-label="Left">◀</button>
+        <button type="button" class="pad-btn" data-action="right" data-side="p1" data-hold="1" aria-label="Right">▶</button>
+        <button type="button" class="pad-btn pad-block" data-action="block" data-side="p1" data-hold="1" aria-label="Block">BLK</button>
+      </div>
+      <div class="pad-cluster pad-mid">
+        <button type="button" class="pad-btn pad-pause" data-action="pause" data-hold="0" aria-label="Pause">❚❚</button>
+      </div>
+      <div class="pad-cluster pad-attack">
+        <button type="button" class="pad-btn pad-light" data-action="light" data-side="p1" data-hold="1" aria-label="Light">L</button>
+        <button type="button" class="pad-btn pad-heavy" data-action="heavy" data-side="p1" data-hold="1" aria-label="Heavy">H</button>
+        <button type="button" class="pad-btn pad-special" data-action="special" data-side="p1" data-hold="1" aria-label="Special">SP</button>
+      </div>
+    </div>
+  </div>
+  <script src="js/config.js"></script>
+  <script src="js/input.js"></script>
+  <script src="js/characters.js"></script>
+  <script src="js/fighter.js"></script>
+  <script src="js/combat.js"></script>
+  <script src="js/render.js"></script>
+  <script src="js/scenes.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
