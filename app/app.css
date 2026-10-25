@@ -243,30 +243,24 @@ button.card{width:100%;text-align:left;cursor:pointer;font:inherit}
 .ff-stage{position:relative;overflow:hidden}
 .ff-arena{position:relative;height:210px;margin:4px -4px 12px;border-radius:calc(var(--radius-window) - 4px);overflow:hidden;
   background:
-    linear-gradient(180deg, rgba(12,8,6,.35), rgba(8,4,2,.55)),
-    var(--scene, none) center/cover no-repeat,
     radial-gradient(ellipse 90% 55% at 50% 108%, rgba(255,120,40,.22), transparent 55%),
     linear-gradient(180deg, #1a0f0c 0%, #2a1810 38%, #3d2214 62%, #1c120e 100%);
   border:1px solid rgba(255,140,60,.18);box-shadow:inset 0 0 40px rgba(0,0,0,.45)}
-/* FX overlay: hidden on idle (sprites + scene primary); visible while a command clip plays */
-.ff-clash-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;
-  background:#120c0a;pointer-events:none;-webkit-playsinline:true;opacity:0;z-index:2;transition:opacity .12s ease}
-.ff-clash-video.is-playing{opacity:1}
-.ff-clash-video--fx{opacity:0}
+/* Video stage disabled — FF card clash only */
+.ff-clash-video{display:none!important}
 .ff-arena .ff-floor,.ff-arena .ff-sprite{display:block;z-index:1}
-.ff-arena.is-fx-playing .ff-floor,.ff-arena.is-fx-playing .ff-sprite{opacity:0}
 .ff-arena::before{content:"";position:absolute;inset:0;background:
   repeating-linear-gradient(90deg, transparent 0 18px, rgba(255,160,80,.03) 18px 19px),
   repeating-linear-gradient(0deg, transparent 0 22px, rgba(0,0,0,.08) 22px 23px);
   opacity:.7;pointer-events:none}
 .ff-floor{position:absolute;left:0;right:0;bottom:0;height:42%;background:linear-gradient(180deg, transparent, rgba(20,10,6,.55) 40%, rgba(8,4,2,.75));pointer-events:none}
-.ff-sprite{position:absolute;width:112px;height:128px;transform-origin:center bottom;will-change:transform,filter}
-.ff-sprite__img{width:100%;height:100%;border-radius:10px;background:center/cover no-repeat;background-image:var(--sprite);background-color:var(--color-surface-2);
-  border:2px solid rgba(255,255,255,.12);box-shadow:0 8px 20px rgba(0,0,0,.45);overflow:hidden}
-.ff-boss{left:10px;top:28px}
-.ff-boss .ff-sprite__img{border-color:rgba(255,120,60,.4);transform:scaleX(-1)}
-.ff-hero{right:10px;bottom:18px;width:118px;height:136px}
-.ff-hero .ff-sprite__img{border-color:rgba(58,184,255,.5);box-shadow:0 8px 22px rgba(58,184,255,.2),0 8px 20px rgba(0,0,0,.45);background-size:cover;background-position:center 20%;image-rendering:pixelated}
+.ff-sprite{position:absolute;width:118px;height:140px;transform-origin:center bottom;will-change:transform,filter;filter:drop-shadow(0 10px 14px rgba(0,0,0,.55))}
+.ff-sprite__img{width:100%;height:100%;border-radius:12px;background:center/cover no-repeat;background-image:var(--sprite);background-color:var(--color-surface-2);
+  border:3px solid rgba(255,255,255,.16);box-shadow:inset 0 0 0 1px rgba(255,255,255,.06),0 8px 20px rgba(0,0,0,.45);overflow:hidden;image-rendering:pixelated}
+.ff-boss{left:12px;top:24px}
+.ff-boss .ff-sprite__img{border-color:rgba(255,120,60,.55);box-shadow:0 0 0 1px rgba(255,120,60,.25),0 8px 22px rgba(255,100,40,.18),0 8px 20px rgba(0,0,0,.45);background-position:center 15%}
+.ff-hero{right:12px;bottom:16px;width:124px;height:148px}
+.ff-hero .ff-sprite__img{border-color:rgba(58,184,255,.65);box-shadow:0 0 0 1px rgba(58,184,255,.3),0 8px 22px rgba(58,184,255,.25),0 8px 20px rgba(0,0,0,.45);background-size:cover;background-position:center 18%;image-rendering:pixelated}
 .ff-flash{position:absolute;inset:0;border-radius:10px;pointer-events:none;opacity:0;mix-blend-mode:screen}
 .ff-hud .battle-side{margin-bottom:10px}
 .battle-side.enemy .battle-name{color:var(--color-accent)}
