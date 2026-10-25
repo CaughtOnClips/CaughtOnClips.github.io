@@ -274,7 +274,6 @@ const BATTLE_VIDEOS = {
   attack: { src: "battle/fx/attack.mp4", poster: "battle/fx/attack-poster.jpg" },
   "attack-magic": { src: "battle/fx/attack-magic.mp4", poster: "battle/fx/attack-magic-poster.jpg" },
   defend: { src: "battle/fx/defend.mp4", poster: "battle/fx/defend-poster.jpg" },
-  "temper-strike": { src: "battle/fx/temper.mp4", poster: "battle/fx/temper-poster.jpg" },
   "brace-pulse": { src: "battle/fx/brace.mp4", poster: "battle/fx/brace-poster.jpg" },
   "iron-guard": { src: "battle/fx/iron-guard.mp4", poster: "battle/fx/iron-guard-poster.jpg" },
   "overheat-burst": { src: "battle/fx/overheat.mp4", poster: "battle/fx/overheat-poster.jpg" },
@@ -300,17 +299,66 @@ const BOSS_FX_SET = new Set(BOSS_FX_IDS);
 function hasBossFx(bossId) {
   return !!(bossId && BOSS_FX_SET.has(bossId));
 }
-/** Idle / primary clash video for a fight: unique boss-fx clip when present, else shared fight-clash. */
+/** Kept for callers. Boss-fx clips are not the fight stage (they played as the same cutscene). */
 function bossBattleVideo(bossId) {
   if (hasBossFx(bossId)) {
     return { src: "battle/boss-fx/" + bossId + ".mp4", poster: "battle/boss-fx/" + bossId + "-poster.jpg" };
   }
   return BATTLE_VIDEOS.idle;
 }
-/** Move FX by key; pass bossId with key "idle" for the fight's unique clash clip. */
-function battleVideoFor(key, bossId) {
-  if (key === "idle") return bossBattleVideo(bossId);
-  return BATTLE_VIDEOS[key] || BATTLE_VIDEOS.fallback;
+/** Per-boss scenery + attack motion. Player commands stay the shared move FX. */
+const BOSS_STAGE = {
+  "ember-whelp": { scene: "coal", move: "bite", x: 156, ms: 540 },
+  "scrap-hound": { scene: "junk", move: "lunge", x: 210, ms: 460 },
+  "cinder-boar": { scene: "slag", move: "charge", x: 236, ms: 500 },
+  "anvil-beetle": { scene: "anvil", move: "slam", x: 124, ms: 820 },
+  "iron-warden": { scene: "hall", move: "punch", x: 176, ms: 480 },
+  "rust-serpent": { scene: "rust", move: "coil", x: 188, ms: 720 },
+  "coal-golem": { scene: "furnace", move: "slam", x: 132, ms: 880 },
+  "brass-lynx": { scene: "brass", move: "pounce", x: 214, ms: 440 },
+  "slag-pugilist": { scene: "pit", move: "punch", x: 198, ms: 420 },
+  "forge-drake": { scene: "bellows", move: "breath", x: 168, ms: 840 },
+  "ironback": { scene: "plate", move: "bash", x: 108, ms: 920 },
+  "slag-wyrm": { scene: "molten", move: "breath", x: 204, ms: 760 },
+  "temper-sphinx": { scene: "dusk", move: "pounce", x: 172, ms: 640 },
+  "quench-leviathan": { scene: "steam", move: "bash", x: 148, ms: 900 }
+};
+const BOSS_STAGE_MOVES = ["bite", "lunge", "charge", "slam", "punch", "coil", "pounce", "breath", "bash"];
+const BOSS_STAGE_SCENES = ["coal", "junk", "slag", "anvil", "hall", "rust", "furnace", "brass", "pit", "bellows", "plate", "molten", "dusk", "steam"];
+function bossStage(bossId) {
+  if (bossId && BOSS_STAGE[bossId]) return BOSS_STAGE[bossId];
+  let n = 0;
+  const m = /^forge-(\d+)$/.exec(bossId || "");
+  if (m) n = +m[1];
+  return {
+    scene: BOSS_STAGE_SCENES[n % BOSS_STAGE_SCENES.length],
+    move: BOSS_STAGE_MOVES[n % BOSS_STAGE_MOVES.length],
+    x: 140 + (n % 5) * 18,
+    ms: 520 + (n % 4) * 90
+  };
+}
+/** Clips that depict the picked fighter instead of the shared Vega set. */
+const HERO_FX_CLIP = {
+  attack: ["attack.mp4", "attack-poster.jpg"],
+  "attack-magic": ["attack-magic.mp4", "attack-magic-poster.jpg"],
+  defend: ["defend.mp4", "defend-poster.jpg"],
+  "brace-pulse": ["brace.mp4", "brace-poster.jpg"],
+  "temper-strike": ["temper.mp4", "temper-poster.jpg"]
+};
+const HERO_FX_IDS = new Set(["pink", "blue", "green"]);
+function heroFxClip(heroId, key) {
+  const pair = HERO_FX_CLIP[key];
+  if (!pair || !HERO_FX_IDS.has(heroId)) return null;
+  return { src: "battle/hero-fx/" + heroId + "/" + pair[0], poster: "battle/hero-fx/" + heroId + "/" + pair[1] };
+}
+/** Player-command FX. Idle and enemy are not clips — scenery, boss art, and bossStage moves cover those.
+ *  Shared battle/fx/temper.mp4 is a medieval knight placeholder and is never returned. */
+function battleVideoFor(key, bossId, heroId) {
+  if (!key || key === "idle" || key === "enemy") return null;
+  const own = heroFxClip(heroId || "twist", key);
+  if (own) return own;
+  if (key === "temper-strike") return BATTLE_VIDEOS["attack-magic"];
+  return BATTLE_VIDEOS[key] || null;
 }
 function battlePlayerStats(stats) {
   const s = stats || {};
@@ -326,5 +374,5 @@ function battlePlayerStats(stats) {
   };
 }
 
-window.HG_GAME = { STATS, RANKS, xpToNext, MAX_LEVEL, LEVEL_POINTS, LEVEL_ALL_STATS, DAILY_POINTS, SETS_PER_STAT, CLASS_LEVEL, MAX_SHIELDS, dailyClearXp, dailyXpCap, CARDIO, statFor, setXp, dailyQuest, rankTrial, CLASS_TRIAL, CLASSES, SKILL_PLANS, SKILLS, VARIATIONS, ACH, newGame, BATTLE_FIRST_UNLOCK, BATTLE_UNLOCK_STEP, BATTLE_LIST_AHEAD, battleUnlockLevel, BOSSES_HAND, HEROES, heroById, activeHero, heroLogArt, heroBattleArt, HERO_ART, HERO_BATTLE_ART, HERO_SHOWCASE_ART, BOSS_ART_FALLBACK, makeBoss, bossById, listBosses, BATTLE_BASICS, BATTLE_SKILL_MOVES, battleMoves, battlePlayerStats, BATTLE_VIDEOS, BOSS_FX_IDS, hasBossFx, bossBattleVideo, battleVideoFor };
+window.HG_GAME = { STATS, RANKS, xpToNext, MAX_LEVEL, LEVEL_POINTS, LEVEL_ALL_STATS, DAILY_POINTS, SETS_PER_STAT, CLASS_LEVEL, MAX_SHIELDS, dailyClearXp, dailyXpCap, CARDIO, statFor, setXp, dailyQuest, rankTrial, CLASS_TRIAL, CLASSES, SKILL_PLANS, SKILLS, VARIATIONS, ACH, newGame, BATTLE_FIRST_UNLOCK, BATTLE_UNLOCK_STEP, BATTLE_LIST_AHEAD, battleUnlockLevel, BOSSES_HAND, HEROES, heroById, activeHero, heroLogArt, heroBattleArt, HERO_ART, HERO_BATTLE_ART, HERO_SHOWCASE_ART, BOSS_ART_FALLBACK, makeBoss, bossById, listBosses, BATTLE_BASICS, BATTLE_SKILL_MOVES, battleMoves, battlePlayerStats, BATTLE_VIDEOS, BOSS_FX_IDS, hasBossFx, bossBattleVideo, bossStage, battleVideoFor };
 })();
