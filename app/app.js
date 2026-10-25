@@ -1033,7 +1033,7 @@ function renderFight() {
   setTabs(null);
   const P = fight.p, E = fight.e, moves = GM.battleMoves(S.game.skills);
   const over = fight.over, busy = !!fight.busy;
-  const idle = (GM.battleVideoFor && GM.battleVideoFor("idle")) || { src: "battle/fight-clash.mp4", poster: "battle/fight-clash-poster.jpg" };
+  const idle = (GM.bossBattleVideo && GM.bossBattleVideo(fight.bossId)) || (GM.battleVideoFor && GM.battleVideoFor("idle", fight.bossId)) || { src: "battle/fight-clash.mp4", poster: "battle/fight-clash-poster.jpg" };
   app.innerHTML = `<div class="top"><button class="iconbtn" id="bback" aria-label="Back" ${busy && !over ? "disabled" : ""}>‹</button><h1 style="margin:0;font-size:20px">Rank Battle</h1></div>
     <div class="battle-stage system-window ff-stage">
       <div class="ff-arena" aria-hidden="true">

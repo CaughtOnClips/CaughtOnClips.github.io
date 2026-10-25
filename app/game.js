@@ -290,7 +290,26 @@ const BATTLE_VIDEOS = {
   idle: { src: "battle/fight-clash.mp4", poster: "battle/fight-clash-poster.jpg" },
   fallback: { src: "battle/fx/attack.mp4", poster: "battle/fx/attack-poster.jpg" }
 };
-function battleVideoFor(key) {
+/** Hand-crafted Vega-vs-boss idle clips for the first 14 bosses (BOSSES_HAND). */
+const BOSS_FX_IDS = [
+  "ember-whelp", "scrap-hound", "cinder-boar", "anvil-beetle", "iron-warden",
+  "rust-serpent", "coal-golem", "brass-lynx", "slag-pugilist", "forge-drake",
+  "ironback", "slag-wyrm", "temper-sphinx", "quench-leviathan"
+];
+const BOSS_FX_SET = new Set(BOSS_FX_IDS);
+function hasBossFx(bossId) {
+  return !!(bossId && BOSS_FX_SET.has(bossId));
+}
+/** Idle / primary clash video for a fight: unique boss-fx clip when present, else shared fight-clash. */
+function bossBattleVideo(bossId) {
+  if (hasBossFx(bossId)) {
+    return { src: "battle/boss-fx/" + bossId + ".mp4", poster: "battle/boss-fx/" + bossId + "-poster.jpg" };
+  }
+  return BATTLE_VIDEOS.idle;
+}
+/** Move FX by key; pass bossId with key "idle" for the fight's unique clash clip. */
+function battleVideoFor(key, bossId) {
+  if (key === "idle") return bossBattleVideo(bossId);
   return BATTLE_VIDEOS[key] || BATTLE_VIDEOS.fallback;
 }
 function battlePlayerStats(stats) {
@@ -307,5 +326,5 @@ function battlePlayerStats(stats) {
   };
 }
 
-window.HG_GAME = { STATS, RANKS, xpToNext, MAX_LEVEL, LEVEL_POINTS, LEVEL_ALL_STATS, DAILY_POINTS, SETS_PER_STAT, CLASS_LEVEL, MAX_SHIELDS, dailyClearXp, dailyXpCap, CARDIO, statFor, setXp, dailyQuest, rankTrial, CLASS_TRIAL, CLASSES, SKILL_PLANS, SKILLS, VARIATIONS, ACH, newGame, BATTLE_FIRST_UNLOCK, BATTLE_UNLOCK_STEP, BATTLE_LIST_AHEAD, battleUnlockLevel, BOSSES_HAND, HEROES, heroById, activeHero, heroLogArt, heroBattleArt, HERO_ART, HERO_BATTLE_ART, HERO_SHOWCASE_ART, BOSS_ART_FALLBACK, makeBoss, bossById, listBosses, BATTLE_BASICS, BATTLE_SKILL_MOVES, battleMoves, battlePlayerStats, BATTLE_VIDEOS, battleVideoFor };
+window.HG_GAME = { STATS, RANKS, xpToNext, MAX_LEVEL, LEVEL_POINTS, LEVEL_ALL_STATS, DAILY_POINTS, SETS_PER_STAT, CLASS_LEVEL, MAX_SHIELDS, dailyClearXp, dailyXpCap, CARDIO, statFor, setXp, dailyQuest, rankTrial, CLASS_TRIAL, CLASSES, SKILL_PLANS, SKILLS, VARIATIONS, ACH, newGame, BATTLE_FIRST_UNLOCK, BATTLE_UNLOCK_STEP, BATTLE_LIST_AHEAD, battleUnlockLevel, BOSSES_HAND, HEROES, heroById, activeHero, heroLogArt, heroBattleArt, HERO_ART, HERO_BATTLE_ART, HERO_SHOWCASE_ART, BOSS_ART_FALLBACK, makeBoss, bossById, listBosses, BATTLE_BASICS, BATTLE_SKILL_MOVES, battleMoves, battlePlayerStats, BATTLE_VIDEOS, BOSS_FX_IDS, hasBossFx, bossBattleVideo, battleVideoFor };
 })();
