@@ -243,13 +243,18 @@ button.card{width:100%;text-align:left;cursor:pointer;font:inherit}
 .ff-stage{position:relative;overflow:hidden}
 .ff-arena{position:relative;height:210px;margin:4px -4px 12px;border-radius:calc(var(--radius-window) - 4px);overflow:hidden;
   background:
+    linear-gradient(180deg, rgba(12,8,6,.35), rgba(8,4,2,.55)),
+    var(--scene, none) center/cover no-repeat,
     radial-gradient(ellipse 90% 55% at 50% 108%, rgba(255,120,40,.22), transparent 55%),
     linear-gradient(180deg, #1a0f0c 0%, #2a1810 38%, #3d2214 62%, #1c120e 100%);
   border:1px solid rgba(255,140,60,.18);box-shadow:inset 0 0 40px rgba(0,0,0,.45)}
-.ff-clash-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none;
-  background:#120c0a;pointer-events:none;-webkit-playsinline:true;opacity:0;z-index:0}
-.ff-clash-video--fx{display:none}
+/* FX overlay: hidden on idle (sprites + scene primary); visible while a command clip plays */
+.ff-clash-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;
+  background:#120c0a;pointer-events:none;-webkit-playsinline:true;opacity:0;z-index:2;transition:opacity .12s ease}
+.ff-clash-video.is-playing{opacity:1}
+.ff-clash-video--fx{opacity:0}
 .ff-arena .ff-floor,.ff-arena .ff-sprite{display:block;z-index:1}
+.ff-arena.is-fx-playing .ff-floor,.ff-arena.is-fx-playing .ff-sprite{opacity:0}
 .ff-arena::before{content:"";position:absolute;inset:0;background:
   repeating-linear-gradient(90deg, transparent 0 18px, rgba(255,160,80,.03) 18px 19px),
   repeating-linear-gradient(0deg, transparent 0 22px, rgba(0,0,0,.08) 22px 23px);
