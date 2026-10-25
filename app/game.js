@@ -290,67 +290,7 @@ const BATTLE_VIDEOS = {
   idle: { src: "battle/fight-clash.mp4", poster: "battle/fight-clash-poster.jpg" },
   fallback: { src: "battle/fx/attack.mp4", poster: "battle/fx/attack-poster.jpg" }
 };
-// Per-hero Rank Battle composed scenes (pink/blue/green). twist uses BATTLE_VIDEOS.
-// Core clips shipped per hero: idle, attack, attack-magic, defend (+ temper when present).
-// Other skill keys alias onto those until dedicated hero-fx clips exist.
-const HERO_BATTLE_CORE = ["idle", "attack", "attack-magic", "defend", "temper-strike", "brace-pulse", "iron-guard", "overheat-burst", "spring-strike", "flow-mend"];
-const HERO_BATTLE_ALIAS = {
-  "iron-guard": "defend",
-  "overheat-burst": "attack-magic",
-  "spring-strike": "attack",
-  "flow-mend": "attack-magic",
-  "soft-reset": "attack-magic",
-  "blitz-dash": "attack",
-  "crushing-blow": "attack",
-  "burden-slam": "attack",
-  "bar-drop": "attack",
-  "steady-burn": "attack-magic"
-};
-// Only clips that exist under battle/hero-fx/{id}/. Missing keys use HERO_BATTLE_ALIAS then twist.
-const HERO_CLIP_FILE = {
-  idle: { src: "idle.mp4", poster: "idle-poster.jpg" },
-  attack: { src: "attack.mp4", poster: "attack-poster.jpg" },
-  "attack-magic": { src: "attack-magic.mp4", poster: "attack-magic-poster.jpg" },
-  defend: { src: "defend.mp4", poster: "defend-poster.jpg" },
-  "temper-strike": { src: "temper.mp4", poster: "temper-poster.jpg" },
-  "brace-pulse": { src: "brace.mp4", poster: "brace-poster.jpg" }
-};
-function heroFxBase(heroId) { return "battle/hero-fx/" + heroId + "/"; }
-function battleVideosForHero(heroId) {
-  const id = heroId || "twist";
-  if (id === "twist") return BATTLE_VIDEOS;
-  const base = heroFxBase(id);
-  const map = {};
-  // Shared boss-side clips stay on the default set
-  map.enemy = BATTLE_VIDEOS.enemy;
-  map.fallback = BATTLE_VIDEOS.fallback;
-  for (const key of Object.keys(BATTLE_VIDEOS)) {
-    if (key === "enemy" || key === "fallback") continue;
-    const fileKey = HERO_CLIP_FILE[key] ? key : (HERO_BATTLE_ALIAS[key] || null);
-    const files = fileKey && HERO_CLIP_FILE[fileKey];
-    if (files) {
-      // Prefer dedicated clip path; callers may 404 → battleVideoFor falls back at resolve time via known set
-      map[key] = { src: base + files.src, poster: base + files.poster, _heroCore: fileKey };
-    } else {
-      map[key] = BATTLE_VIDEOS[key];
-    }
-  }
-  return map;
-}
-/** Resolve {src,poster} for a battle clip. heroId swaps the composed fighter (not dual sprites). */
-function battleVideoFor(key, heroId) {
-  const id = heroId || "twist";
-  if (!id || id === "twist") return BATTLE_VIDEOS[key] || BATTLE_VIDEOS.fallback;
-  // Boss-only clips shared
-  if (key === "enemy") return BATTLE_VIDEOS.enemy;
-  const base = heroFxBase(id);
-  // Try exact hero clip, then alias onto a core hero clip, then twist fallback
-  const tryKeys = [key];
-  if (HERO_BATTLE_ALIAS[key]) tryKeys.push(HERO_BATTLE_ALIAS[key]);
-  for (const k of tryKeys) {
-    const files = HERO_CLIP_FILE[k];
-    if (files) return { src: base + files.src, poster: base + files.poster };
-  }
+function battleVideoFor(key) {
   return BATTLE_VIDEOS[key] || BATTLE_VIDEOS.fallback;
 }
 function battlePlayerStats(stats) {
@@ -367,5 +307,5 @@ function battlePlayerStats(stats) {
   };
 }
 
-window.HG_GAME = { STATS, RANKS, xpToNext, MAX_LEVEL, LEVEL_POINTS, LEVEL_ALL_STATS, DAILY_POINTS, SETS_PER_STAT, CLASS_LEVEL, MAX_SHIELDS, dailyClearXp, dailyXpCap, CARDIO, statFor, setXp, dailyQuest, rankTrial, CLASS_TRIAL, CLASSES, SKILL_PLANS, SKILLS, VARIATIONS, ACH, newGame, BATTLE_FIRST_UNLOCK, BATTLE_UNLOCK_STEP, BATTLE_LIST_AHEAD, battleUnlockLevel, BOSSES_HAND, HEROES, heroById, activeHero, heroLogArt, heroBattleArt, HERO_ART, HERO_BATTLE_ART, HERO_SHOWCASE_ART, BOSS_ART_FALLBACK, makeBoss, bossById, listBosses, BATTLE_BASICS, BATTLE_SKILL_MOVES, battleMoves, battlePlayerStats, BATTLE_VIDEOS, battleVideoFor, battleVideosForHero, HERO_BATTLE_ALIAS, HERO_CLIP_FILE };
+window.HG_GAME = { STATS, RANKS, xpToNext, MAX_LEVEL, LEVEL_POINTS, LEVEL_ALL_STATS, DAILY_POINTS, SETS_PER_STAT, CLASS_LEVEL, MAX_SHIELDS, dailyClearXp, dailyXpCap, CARDIO, statFor, setXp, dailyQuest, rankTrial, CLASS_TRIAL, CLASSES, SKILL_PLANS, SKILLS, VARIATIONS, ACH, newGame, BATTLE_FIRST_UNLOCK, BATTLE_UNLOCK_STEP, BATTLE_LIST_AHEAD, battleUnlockLevel, BOSSES_HAND, HEROES, heroById, activeHero, heroLogArt, heroBattleArt, HERO_ART, HERO_BATTLE_ART, HERO_SHOWCASE_ART, BOSS_ART_FALLBACK, makeBoss, bossById, listBosses, BATTLE_BASICS, BATTLE_SKILL_MOVES, battleMoves, battlePlayerStats, BATTLE_VIDEOS, battleVideoFor };
 })();

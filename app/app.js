@@ -835,13 +835,11 @@ function playFightClip(clipKey) {
     const onEnded = () => finish();
     const tid = setTimeout(finish, FIGHT_CLIP_MAX_MS);
     if (!v) { finish(); return; }
-    const heroId = (S.game && S.game.heroId) || "twist";
-    const info = (GM.battleVideoFor && GM.battleVideoFor(clipKey, heroId)) || { src: "battle/fight-clash.mp4", poster: "battle/fight-clash-poster.jpg" };
+    const info = (GM.battleVideoFor && GM.battleVideoFor(clipKey)) || { src: "battle/fight-clash.mp4", poster: "battle/fight-clash-poster.jpg" };
     const key = clipKey || "idle";
     try {
-      const clipTag = heroId + ":" + key;
-      if (v.dataset.clip !== clipTag || !v.getAttribute("src") || !v.src.includes(info.src.split("/").pop())) {
-        v.dataset.clip = clipTag;
+      if (v.dataset.clip !== key || !v.getAttribute("src") || !v.src.includes(info.src.split("/").pop())) {
+        v.dataset.clip = key;
         if (info.poster) v.setAttribute("poster", info.poster);
         v.src = info.src;
         v.load();
@@ -1035,9 +1033,7 @@ function renderFight() {
   setTabs(null);
   const P = fight.p, E = fight.e, moves = GM.battleMoves(S.game.skills);
   const over = fight.over, busy = !!fight.busy;
-  const heroId = (S.game && S.game.heroId) || "twist";
-  const hero = (GM.activeHero && GM.activeHero(S.game)) || { id: "twist", name: "Vega" };
-  const idle = (GM.battleVideoFor && GM.battleVideoFor("idle", heroId)) || { src: "battle/fight-clash.mp4", poster: "battle/fight-clash-poster.jpg" };
+  const idle = (GM.battleVideoFor && GM.battleVideoFor("idle")) || { src: "battle/fight-clash.mp4", poster: "battle/fight-clash-poster.jpg" };
   app.innerHTML = `<div class="top"><button class="iconbtn" id="bback" aria-label="Back" ${busy && !over ? "disabled" : ""}>‹</button><h1 style="margin:0;font-size:20px">Rank Battle</h1></div>
     <div class="battle-stage system-window ff-stage">
       <div class="ff-arena" aria-hidden="true">
@@ -1045,7 +1041,7 @@ function renderFight() {
       </div>
       <div class="ff-hud">
         <div class="battle-side enemy"><div class="battle-name">${h(fight.bossName)}${fight.human ? " · Rival" : ""}</div>${hpBar(E.hp, E.maxHp, "enemy")}</div>
-        <div class="battle-side you"><div class="battle-name">${h(hero.name || S.game.name || "Lifter")} · LV ${S.game.level}</div>${hpBar(P.hp, P.maxHp, "you")}
+        <div class="battle-side you"><div class="battle-name">${h(S.game.name || "Lifter")} · LV ${S.game.level}</div>${hpBar(P.hp, P.maxHp, "you")}
           <div class="battle-stam">Stamina ${P.stam}/${P.stamMax}${P.guardTurns ? " · Guard" : ""}${P.defending ? " · Defend" : ""}</div></div>
       </div>
       <div class="battle-log" aria-live="polite">${fight.log.map(l => `<div>${h(l)}</div>`).join("")}</div>
