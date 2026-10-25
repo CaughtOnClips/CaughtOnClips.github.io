@@ -815,7 +815,7 @@ function applyEnemyDmg(amt) {
   return d;
 }
 function clearAnim() { if (fight) { fight.anim = null; fight.animFlash = null; } }
-function setAnim(kind, flash) { if (fight) { fight.anim = kind; fight.animFlash = flash || null; } }
+function setAnim(kind, flash) { if (fight) { fight.anim = kind; fight.animFlash = null; } }
 /** FF card-clash timings — match CSS keyframes (~480–780ms). No cutscene videos. */
 const ANIM_MS = { attack: 700, special: 780, defend: 480, miss: 700, "e-attack": 700, "e-defend": 420, "e-miss": 500, "e-windup": 160 };
 function enemyTurn() {
@@ -888,9 +888,7 @@ function applyPlayerAction(act, move) {
   let result = { kind: act, hit: false, miss: false, flash: null };
   if (act === "attack") {
     fight.spamAtks = (fight.spamAtks || 0) + 1;
-    // Punch / magic flavor still alternates for flash intensity (no videos)
     fight.atkHits = (fight.atkHits || 0) + 1;
-    const magic = (fight.atkHits % 2 === 0);
     if (!hitChance(P.acc)) { pushLog("Your strike misses."); result.miss = true; }
     else {
       const crit = rollCrit(P.crit, 0);
@@ -899,7 +897,6 @@ function applyPlayerAction(act, move) {
       E.hp = Math.max(0, E.hp - dmg);
       pushLog(`You${crit ? " crit" : " hit"} for ${dmg}.`);
       result.hit = true;
-      if (magic) result.flash = "volt";
     }
   } else if (act === "defend") {
     fight.spamAtks = 0;
@@ -911,11 +908,7 @@ function applyPlayerAction(act, move) {
     if (P.stam < move.cost) { toast("Not enough stamina"); return null; }
     P.stam -= move.cost;
     result.kind = "special";
-    result.flash = move.kind === "heal" || move.kind === "cleanse" ? "heal"
-      : move.kind === "defend+" ? "guard"
-      : move.kind === "dot" ? "burn"
-      : move.kind === "multi" ? "volt"
-      : "ember";
+    result.flash = null;
     if (move.kind === "dmg" || move.kind === "multi") {
       const hits = move.hits || 1;
       let total = 0;
@@ -981,20 +974,17 @@ function resolvePlayerAction(act, move) {
   const result = applyPlayerAction(act, move);
   if (!result) { clearAnim(); fight.busy = false; renderFight(); return; }
   let anim = "attack";
-  let flash = result.flash || null;
-  const homePose = result.kind === "defend" || flash === "heal" || flash === "guard";
+  const homePose = result.kind === "defend";
   if (homePose) anim = "defend";
   else if (result.miss) anim = "miss";
-  else if (result.kind === "special") anim = result.hit ? "special-hit" : "special";
-  else if (flash === "volt") anim = result.hit ? "special-hit" : "special";
+  else if (result.kind === "special") anim = result.hit ? "attack-hit" : "attack";
   else if (result.hit) anim = "attack-hit";
   else anim = "attack";
-  setAnim(anim, flash);
+  setAnim(anim, null);
   renderFight();
   const tClash = homePose ? ANIM_MS.defend
-    : ((result.kind === "special" || flash === "volt") && !result.miss ? ANIM_MS.special
     : result.miss ? ANIM_MS.miss
-    : ANIM_MS.attack);
+    : ANIM_MS.attack;
   setTimeout(() => {
     if (!fight) return;
     if (fight.e.hp <= 0) {
@@ -1018,7 +1008,7 @@ function renderFight() {
   // Selected Log hero pixel card only — never knight / cutscene placeholder
   const heroArt = (GM.heroBattleArt && GM.heroBattleArt(S.game)) || "battle/chars/twist-pixel.jpg";
   const heroName = ((GM.activeHero && GM.activeHero(S.game)) || {}).name || S.game.name || "Lifter";
-  const flash = fight.animFlash ? ` flash-${fight.animFlash}` : "";
+  const flash = "";
   const clashHit = anim === "attack-hit" || anim === "special-hit" || anim === "e-attack";
   const heroCls = ["ff-sprite", "ff-hero",
     anim === "attack" || anim === "attack-hit" ? "is-attack" : "",
@@ -1039,8 +1029,8 @@ function renderFight() {
     <div class="battle-stage system-window ff-stage${flash}">
       <div class="ff-arena${clashHit ? " is-impact" : ""}" aria-hidden="true">
         <div class="ff-floor"></div>
-        <div id="ff-boss" class="${bossCls}" style="--sprite:url('${bossArt}')"><div class="ff-sprite__img"></div><div class="ff-flash"></div></div>
-        <div id="ff-hero" class="${heroCls}" style="--sprite:url('${heroArt}')"><div class="ff-sprite__img"></div><div class="ff-flash"></div></div>
+        <div id="ff-boss" class="${bossCls}" style="--sprite:url('${bossArt}')"><div class="ff-sprite__img"></div></div>
+        <div id="ff-hero" class="${heroCls}" style="--sprite:url('${heroArt}')"><div class="ff-sprite__img"></div></div>
       </div>
       <div class="ff-hud">
         <div class="battle-side enemy"><div class="battle-name">${h(fight.bossName)}${fight.human ? " · Rival" : ""}</div>${hpBar(E.hp, E.maxHp, "enemy")}</div>

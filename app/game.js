@@ -300,23 +300,10 @@ const BOSS_FX_SET = new Set(BOSS_FX_IDS);
 function hasBossFx(bossId) {
   return !!(bossId && BOSS_FX_SET.has(bossId));
 }
-/** Unique boss-fx clip + poster for a fight (scenery / boss counter). */
-function bossBattleVideo(bossId) {
-  if (hasBossFx(bossId)) {
-    return { src: "battle/boss-fx/" + bossId + ".mp4", poster: "battle/boss-fx/" + bossId + "-poster.jpg" };
-  }
-  return BATTLE_VIDEOS.idle;
-}
-/** Static arena scenery poster unique per boss (sprite-stage backdrop). */
-function bossScenePoster(bossId) {
-  const v = bossBattleVideo(bossId);
-  return (v && v.poster) || "battle/fight-clash-poster.jpg";
-}
-/** Move FX by key. "enemy" uses that boss's unique boss-fx (not shared enemy.mp4 knight/placeholder). */
-function battleVideoFor(key, bossId) {
-  if (key === "idle" || key === "enemy") return bossBattleVideo(bossId);
-  return BATTLE_VIDEOS[key] || BATTLE_VIDEOS.fallback;
-}
+/** Disabled: Rank Battle is card-clash only (no cutscene videos). Assets remain on disk unused. */
+function bossBattleVideo(bossId) { return null; }
+function bossScenePoster(bossId) { return null; }
+function battleVideoFor(key, bossId) { return null; }
 function battlePlayerStats(stats) {
   const s = stats || {};
   const STR = s.STR || 10, END = s.END || 10, AGI = s.AGI || 10, VIT = s.VIT || 10, DIS = s.DIS || 10;

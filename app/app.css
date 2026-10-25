@@ -261,7 +261,7 @@ button.card{width:100%;text-align:left;cursor:pointer;font:inherit}
 .ff-boss .ff-sprite__img{border-color:rgba(255,120,60,.55);box-shadow:0 0 0 1px rgba(255,120,60,.25),0 8px 22px rgba(255,100,40,.18),0 8px 20px rgba(0,0,0,.45);background-position:center 15%}
 .ff-hero{right:12px;bottom:16px;width:124px;height:148px}
 .ff-hero .ff-sprite__img{border-color:rgba(58,184,255,.65);box-shadow:0 0 0 1px rgba(58,184,255,.3),0 8px 22px rgba(58,184,255,.25),0 8px 20px rgba(0,0,0,.45);background-size:cover;background-position:center 18%;image-rendering:pixelated}
-.ff-flash{position:absolute;inset:0;border-radius:10px;pointer-events:none;opacity:0;mix-blend-mode:screen}
+.ff-flash{display:none!important}
 .ff-hud .battle-side{margin-bottom:10px}
 .battle-side.enemy .battle-name{color:var(--color-accent)}
 .battle-name{font:700 16px/1.2 var(--font-display,var(--font-display-fb));letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px}
@@ -284,7 +284,7 @@ button.card{width:100%;text-align:left;cursor:pointer;font:inherit}
 .ff-hero{--clash-x:-168px}
 .ff-boss{--clash-x:168px}
 .ff-hero.is-attack,.ff-hero.is-clash-out{animation:ff-hero-clash .7s cubic-bezier(.2,.7,.2,1)}
-.ff-hero.is-special{animation:ff-hero-clash-special .78s cubic-bezier(.15,.75,.2,1)}
+.ff-hero.is-special{animation:ff-hero-clash .7s cubic-bezier(.2,.7,.2,1)}
 .ff-hero.is-defend{animation:ff-hero-guard .48s ease}
 .ff-hero.is-dodge{animation:ff-dodge .5s ease}
 .ff-hero.is-hurt{animation:ff-hurt-hero .55s ease .3s both}
@@ -295,13 +295,8 @@ button.card{width:100%;text-align:left;cursor:pointer;font:inherit}
 .ff-boss.is-hurt{animation:ff-hurt-boss .42s ease .3s both}
 .ff-boss.has-guard .ff-sprite__img{filter:brightness(1.05);box-shadow:0 0 14px rgba(255,180,80,.35),0 8px 20px rgba(0,0,0,.45)}
 .ff-arena.is-impact{animation:ff-arena-shake .38s ease .28s both}
-.ff-hero.is-special .ff-flash,.ff-stage.flash-ember .ff-hero.is-special .ff-flash,.ff-stage.flash-ember .ff-boss.is-hurt .ff-flash{opacity:1;background:radial-gradient(circle,rgba(255,140,40,.7),transparent 70%);animation:ff-flash-pulse .55s ease .28s both}
-.ff-stage.flash-volt .ff-hero.is-special .ff-flash,.ff-stage.flash-volt .ff-boss.is-hurt .ff-flash{opacity:1;background:radial-gradient(circle,rgba(80,200,255,.75),transparent 70%);animation:ff-flash-pulse .55s ease .28s both}
-.ff-stage.flash-burn .ff-hero.is-special .ff-flash,.ff-stage.flash-burn .ff-boss.is-hurt .ff-flash{opacity:1;background:radial-gradient(circle,rgba(255,80,40,.7),transparent 70%);animation:ff-flash-pulse .55s ease .28s both}
-.ff-stage.flash-heal .ff-hero.is-defend .ff-flash,.ff-stage.flash-guard .ff-hero.is-defend .ff-flash{opacity:1;background:radial-gradient(circle,rgba(100,255,180,.65),transparent 70%);animation:ff-flash-pulse .45s ease}
-.ff-hero.is-defend .ff-flash{opacity:1;background:radial-gradient(circle,rgba(140,210,255,.55),transparent 70%);animation:ff-flash-pulse .4s ease}
-.ff-boss.is-hurt .ff-flash{opacity:1;background:radial-gradient(circle,rgba(255,220,120,.85),transparent 65%);animation:ff-flash-pulse .4s ease .3s both}
-.ff-hero.is-hurt .ff-flash{opacity:1;background:radial-gradient(circle,rgba(255,60,60,.75),transparent 65%);animation:ff-flash-pulse .42s ease .3s both}
+/* flash FX removed — card clash only */
+
 .ff-hero.is-attack .ff-sprite__img,.ff-hero.is-special .ff-sprite__img{image-rendering:pixelated}
 
 @keyframes ff-hero-clash{
