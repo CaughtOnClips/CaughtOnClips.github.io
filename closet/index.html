@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#e891b0">
+  <meta name="color-scheme" content="light">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Closet">
+  <meta name="format-detection" content="telephone=no">
+  <meta name="description" content="Mix and match outfits on your photo. Pieces layer on you — not a realistic try-on.">
+  <title>Closet</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="icons/favicon-32.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,700;1,9..144,550&family=Nunito:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="app">
+    <header class="topbar">
+      <div class="brand">
+        <img class="mark" src="icons/icon-192.png" alt="" width="40" height="40">
+        <div>
+          <h1>Closet</h1>
+          <p class="tag">Mix your looks</p>
+        </div>
+      </div>
+      <div class="top-actions">
+        <button type="button" class="text-btn" id="btn-share" data-testid="btn-share">Share</button>
+        <button type="button" class="text-btn" id="btn-saved" data-testid="btn-saved">Saved</button>
+      </div>
+    </header>
+
+    <main class="main">
+      <p id="banner-demo" class="banner" hidden>Trying the demo look. Add your photo to dress yourself.</p>
+
+      <section id="stage" class="stage" data-testid="stage" aria-label="Outfit stage">
+        <div id="figure-wrap" class="figure-wrap">
+          <img id="person-img" alt="Your photo">
+          <div class="layer" data-cat="bottom"><img class="garm current" alt=""><img class="garm peek" alt="" hidden></div>
+          <div class="layer" data-cat="top"><img class="garm current" alt=""><img class="garm peek" alt="" hidden></div>
+          <div class="layer" data-cat="dress" hidden><img class="garm current" alt=""><img class="garm peek" alt="" hidden></div>
+          <div class="layer" data-cat="outer" hidden><img class="garm current" alt=""><img class="garm peek" alt="" hidden></div>
+          <div class="layer" data-cat="shoes"><img class="garm current" alt=""><img class="garm peek" alt="" hidden></div>
+        </div>
+
+        <div class="zone zone-top" data-cat="top" data-testid="zone-top">
+          <button type="button" class="arrow prev" data-dir="-1" aria-label="Previous top">‹</button>
+          <span class="zone-label" id="label-top">Top</span>
+          <button type="button" class="arrow next" data-dir="1" aria-label="Next top">›</button>
+        </div>
+        <div class="zone zone-bottom" data-cat="bottom" data-testid="zone-bottom">
+          <button type="button" class="arrow prev" data-dir="-1" aria-label="Previous bottom">‹</button>
+          <span class="zone-label" id="label-bottom">Bottom</span>
+          <button type="button" class="arrow next" data-dir="1" aria-label="Next bottom">›</button>
+        </div>
+        <div class="zone zone-shoes" data-cat="shoes" data-testid="zone-shoes">
+          <button type="button" class="arrow prev" data-dir="-1" aria-label="Previous shoes">‹</button>
+          <span class="zone-label" id="label-shoes">Shoes</span>
+          <button type="button" class="arrow next" data-dir="1" aria-label="Next shoes">›</button>
+        </div>
+      </section>
+
+      <div id="adjust-bar" class="adjust-bar" hidden>
+        <p>Drag to move · Pinch to resize</p>
+        <div class="nudge" aria-label="Nudge selected piece">
+          <button type="button" data-nudge="0,-6" aria-label="Nudge up">↑</button>
+          <button type="button" data-nudge="-6,0" aria-label="Nudge left">←</button>
+          <button type="button" data-nudge="6,0" aria-label="Nudge right">→</button>
+          <button type="button" data-nudge="0,6" aria-label="Nudge down">↓</button>
+          <button type="button" data-scale="-0.05" aria-label="Make smaller">−</button>
+          <button type="button" data-scale="0.05" aria-label="Make bigger">+</button>
+        </div>
+        <div class="layer-chips" id="layer-chips"></div>
+      </div>
+    </main>
+
+    <nav class="dock" aria-label="Actions">
+      <button type="button" id="btn-photo" data-testid="btn-photo">
+        <span class="ico" aria-hidden="true">📷</span><span>Photo</span>
+      </button>
+      <button type="button" id="btn-closet" data-testid="btn-closet">
+        <span class="ico" aria-hidden="true">👗</span><span>Closet</span>
+      </button>
+      <button type="button" id="btn-shuffle" data-testid="btn-shuffle">
+        <span class="ico" aria-hidden="true">✨</span><span>Shuffle</span>
+      </button>
+      <button type="button" id="btn-save" data-testid="btn-save">
+        <span class="ico" aria-hidden="true">♡</span><span>Save</span>
+      </button>
+      <button type="button" id="btn-adjust" data-testid="btn-adjust" aria-pressed="false">
+        <span class="ico" aria-hidden="true">✥</span><span>Adjust</span>
+      </button>
+    </nav>
+  </div>
+
+  <div id="sheet-root" class="sheet-root" hidden></div>
+  <div id="editor-root" class="editor-root" hidden></div>
+  <div id="toast" class="toast" hidden role="status"></div>
+
+  <input type="file" id="file-person-camera" accept="image/*" capture="environment" hidden>
+  <input type="file" id="file-person-lib" accept="image/*" hidden>
+  <input type="file" id="file-item-camera" accept="image/*" capture="environment" hidden>
+  <input type="file" id="file-item-lib" accept="image/*" data-testid="file-item-lib" hidden>
+
+  <script src="db.js"></script>
+  <script src="bg.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
