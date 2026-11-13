@@ -83,52 +83,52 @@ const CLASSES = [
 
 // ---------- Skill-unlocked programs ----------
 const SKILL_PLANS = [
-  { id: "core-forge", skill: "iron-core", name: "Core Forge", equip: "none", level: "Beginner", weeks: 2, perWeek: 3, goal: ["strength", "fit"], blurb: "Two weeks of focused core work. Unlocked by Iron Core I.", workouts: [
+  { id: "core-forge", skill: "iron-core", name: "Core Forge", equip: "none", level: "Beginner", weeks: 2, perWeek: 3, goal: ["strength", "fit"], blurb: "Two weeks of focused core work.", workouts: [
     { id: "cf-1", name: "Core Forge A", mins: 18, ex: [E("Dead bug", 3, 10, 40, ["Low back down", "Slow reach"], { side: true }), E("Plank", 3, "35", 40, ["Squeeze glutes", "Brace"]), E("Glute bridge", 3, 15, 40, ["Squeeze at the top"]), E("Side plank", 2, "25", 30, ["Hips lifted"], { side: true }), E("Hollow body hold", 2, "20", 40, ["Bend knees to scale"])] },
     { id: "cf-2", name: "Core Forge B", mins: 18, ex: [E("Bird dog", 3, 10, 30, ["Hips level"], { side: true }), E("Reverse crunch", 3, 12, 40, ["Curl hips up, no swing"]), E("Bear hold", 3, "25", 40, ["Knees an inch off the floor"]), E("Plank shoulder taps", 3, 16, 40, ["Wide feet, hips still"])] }
   ]},
-  { id: "push-mastery", skill: "push-mastery", name: "Push Mastery", equip: "none", level: "Intermediate", weeks: 4, perWeek: 3, goal: ["strength", "muscle"], blurb: "Push-up progressions from incline to diamond and decline. Unlocked by Push Mastery.", workouts: [
+  { id: "push-mastery", skill: "push-mastery", name: "Push Mastery", equip: "none", level: "Intermediate", weeks: 4, perWeek: 3, goal: ["strength", "muscle"], blurb: "Push-up progressions from incline to diamond and decline.", workouts: [
     { id: "pm-1", name: "Progressions", mins: 25, ex: [E("Incline push-up", 2, 12, 60, ["Warm-up sets, smooth reps"]), E("Push-up", 4, 10, 75, ["Chest to a fist's height"]), E("Diamond push-up", 3, 6, 75, ["Hands close under chest", "Elbows tucked"]), E("Decline push-up (feet on couch)", 3, 6, 90, ["Body straight", "Lower with control"]), E("Tempo push-up (3 s down)", 2, 6, 75, ["Count three seconds down"])] }
   ]},
-  { id: "loaded-carry", skill: "loaded-carry", name: "Loaded Carry", equip: "dumbbells", level: "Intermediate", weeks: 4, perWeek: 2, goal: ["strength"], blurb: "Carries and holds that build grip and full-body strength. Unlocked by Loaded Carry.", workouts: [
+  { id: "loaded-carry", skill: "loaded-carry", name: "Loaded Carry", equip: "dumbbells", level: "Intermediate", weeks: 4, perWeek: 2, goal: ["strength"], blurb: "Carries and holds that build grip and full-body strength.", workouts: [
     { id: "lc-1", name: "Carry Day", mins: 30, ex: [E("Farmer carry (walk or hold)", 4, "40", 75, ["Heavy dumbbells at sides", "Tall posture, short steps"], { w: true }), E("Suitcase carry (one side)", 3, "30", 60, ["Don't lean", "Switch sides each set"], { w: true, side: true }), E("Goblet squat", 3, 10, 90, ["Chest up"], { w: true }), E("Dumbbell row", 3, 10, 75, ["Pull elbow to hip"], { w: true, side: true })] }
   ]},
-  { id: "barbell-basics", skill: "barbell-basics", name: "Barbell Basics", equip: "gym", level: "Intermediate", weeks: 6, perWeek: 3, goal: ["strength", "muscle"], blurb: "Five-by-five on the main barbell lifts. Unlocked by Barbell Basics.", workouts: [
+  { id: "barbell-basics", skill: "barbell-basics", name: "Barbell Basics", equip: "gym", level: "Intermediate", weeks: 6, perWeek: 3, goal: ["strength", "muscle"], blurb: "Five-by-five on the main barbell lifts.", workouts: [
     { id: "bb-1", name: "Day A", mins: 55, ex: [E("Barbell back squat", 5, 5, 150, ["Brace, sit between hips", "Use safety bars"], { w: true }), E("Barbell bench press", 5, 5, 150, ["Bar to mid-chest", "Spotter or pins"], { w: true }), E("Barbell row", 5, 5, 120, ["Flat back, pull to ribs"], { w: true })] },
     { id: "bb-2", name: "Day B", mins: 55, ex: [E("Barbell back squat", 5, 5, 150, ["Same weight as Day A or a little more"], { w: true }), E("Overhead press", 5, 5, 150, ["Glutes tight", "Head through at the top"], { w: true }), E("Barbell deadlift", 1, 5, 180, ["Bar over mid-foot", "Push the floor away"], { w: true })] }
   ]},
-  { id: "engine-room", skill: "engine-room", name: "Engine Room", equip: "none", level: "All levels", weeks: 3, perWeek: 3, goal: ["fat", "fit"], blurb: "20-minute conditioning circuits. Unlocked by Engine Room.", workouts: [
+  { id: "engine-room", skill: "engine-room", name: "Engine Room", equip: "none", level: "All levels", weeks: 3, perWeek: 3, goal: ["fat", "fit"], blurb: "20-minute conditioning circuits.", workouts: [
     { id: "er-1", name: "Engine 20", mins: 20, ex: [E("Jumping jacks (or step-jacks)", 4, "45", 15, ["Land softly"]), E("Mountain climbers", 4, "30", 30, ["Hips low"]), E("Air squat", 4, "40", 20, ["Smooth pace"]), E("High knees (or march)", 4, "30", 30, ["Knees to hip height"])] }
   ]},
-  { id: "5k-builder", skill: "5k-builder", name: "5K Builder", equip: "none", level: "Beginner", weeks: 6, perWeek: 3, goal: ["fit", "fat"], blurb: "Walk-run intervals that build to a continuous 5K. Unlocked by 5K Builder.", workouts: [
+  { id: "5k-builder", skill: "5k-builder", name: "5K Builder", equip: "none", level: "Beginner", weeks: 6, perWeek: 3, goal: ["fit", "fat"], blurb: "Walk-run intervals that build to a continuous 5K.", workouts: [
     { id: "5k-1", name: "Intervals W1", mins: 25, ex: [E("Brisk walk warm-up", 1, "300", 0, ["Easy pace"]), E("Run (easy)", 6, "60", 90, ["Talk-test pace", "Walk during rest"]), E("Walk cool-down", 1, "300", 0, ["Breathe slow"])] },
     { id: "5k-2", name: "Intervals W3", mins: 28, ex: [E("Brisk walk warm-up", 1, "300", 0, ["Easy pace"]), E("Run (easy)", 4, "180", 90, ["Relaxed shoulders"]), E("Walk cool-down", 1, "300", 0, ["Breathe slow"])] }
   ]},
-  { id: "spring-step", skill: "spring-step", name: "Spring Step", equip: "none", level: "Intermediate", weeks: 4, perWeek: 2, goal: ["fit"], blurb: "Plyometric basics. Land softly every rep. Unlocked by Spring Step.", workouts: [
+  { id: "spring-step", skill: "spring-step", name: "Spring Step", equip: "none", level: "Intermediate", weeks: 4, perWeek: 2, goal: ["fit"], blurb: "Plyometric basics. Land softly every rep.", workouts: [
     { id: "ss-1", name: "Plyo Basics", mins: 22, ex: [E("Squat jump", 4, 6, 60, ["Land softly, knees bent", "Reset each rep"]), E("Skater hops", 3, "30", 45, ["Stick each landing"]), E("Lateral shuffle", 3, "30", 45, ["Stay low"]), E("Broad jump (or long step)", 3, 5, 60, ["Swing arms", "Walk back to reset"])] }
   ]},
-  { id: "sprint-intervals", skill: "sprint-intervals", name: "Sprint Intervals", equip: "none", level: "Advanced", weeks: 4, perWeek: 2, goal: ["fat", "fit"], blurb: "Short hard efforts with full recovery. Unlocked by Sprint Intervals.", workouts: [
+  { id: "sprint-intervals", skill: "sprint-intervals", name: "Sprint Intervals", equip: "none", level: "Advanced", weeks: 4, perWeek: 2, goal: ["fat", "fit"], blurb: "Short hard efforts with full recovery.", workouts: [
     { id: "si-1", name: "Sprints", mins: 25, ex: [E("Easy jog warm-up", 1, "300", 60, ["Gradually build pace"]), E("Sprint (hill or flat)", 8, "15", 90, ["Fast but relaxed", "Walk back during rest"]), E("Walk cool-down", 1, "240", 0, ["Breathe slow"])] }
   ]},
-  { id: "mobility-reset", skill: "mobility-reset", name: "Mobility Reset", equip: "none", level: "Beginner", weeks: 2, perWeek: 3, goal: ["fit"], blurb: "Short mobility flows for hips, spine and shoulders. Unlocked by Mobility Reset.", workouts: [
+  { id: "mobility-reset", skill: "mobility-reset", name: "Mobility Reset", equip: "none", level: "Beginner", weeks: 2, perWeek: 3, goal: ["fit"], blurb: "Short mobility flows for hips, spine and shoulders.", workouts: [
     { id: "mr-1", name: "Reset Flow", mins: 15, ex: [E("Cat-cow", 2, 10, 15, ["Move with your breath"]), E("World's greatest stretch", 2, 5, 20, ["Rotate and reach"], { side: true }), E("90/90 hip switch", 2, 8, 20, ["Use hands for support"]), E("Thread the needle", 2, 6, 20, ["Slow rotation"], { side: true }), E("Child's pose breathing", 1, "60", 0, ["Slow breaths"])] }
   ]},
-  { id: "deload-week", skill: "deload-week", name: "Deload Week", equip: "none", level: "All levels", weeks: 1, perWeek: 3, goal: ["fit"], blurb: "A lighter week to recover and come back stronger. Unlocked by Deload Week.", workouts: [
+  { id: "deload-week", skill: "deload-week", name: "Deload Week", equip: "none", level: "All levels", weeks: 1, perWeek: 3, goal: ["fit"], blurb: "A lighter week to recover and come back stronger.", workouts: [
     { id: "dw-1", name: "Easy Session", mins: 20, ex: [E("Brisk walk", 1, "600", 60, ["Easy pace"]), E("Air squat", 2, 10, 60, ["Smooth and easy"]), E("Incline push-up", 2, 8, 60, ["Leave reps in the tank"]), E("Cat-cow", 2, 10, 20, ["Move with breath"])] }
   ]}
 ];
 // Skill tree lines (node I is free; later nodes are Pro content, free during testing)
 const SKILLS = [
-  { id: "iron-core", line: "STR", node: "I", name: "Iron Core I", desc: "Adds the Core Forge plan (2 wks). Rank Battle: Iron Guard.", req: { level: 2, stat: { STR: 11 } } },
-  { id: "push-mastery", line: "STR", node: "II", pro: true, name: "Push Mastery", desc: "Adds Push Mastery and harder push-up tips. Rank Battle: Crushing Blow.", req: { level: 6, stat: { STR: 16 } } },
-  { id: "loaded-carry", line: "STR", node: "III", pro: true, name: "Loaded Carry", desc: "Adds the Loaded Carry dumbbell plan. Rank Battle: Burden Slam.", req: { level: 15, stat: { STR: 30 }, equip: "dumbbells" } },
-  { id: "barbell-basics", line: "STR", node: "IV", pro: true, name: "Barbell Basics", desc: "Adds the Barbell Basics gym plan. Rank Battle: Bar Drop.", req: { level: 20, stat: { STR: 36 }, equip: "gym" } },
-  { id: "engine-room", line: "END", node: "I", name: "Engine Room", desc: "Adds 20-minute conditioning circuits. Rank Battle: Overheat Burst.", req: { level: 3, stat: { END: 12 } } },
-  { id: "5k-builder", line: "END", node: "II", pro: true, name: "5K Builder", desc: "Adds a walk-run plan that builds to 5K. Rank Battle: Steady Burn.", req: { level: 10, stat: { END: 22 } } },
-  { id: "spring-step", line: "AGI", node: "I", name: "Spring Step", desc: "Adds plyometric basics. Rank Battle: Spring Strike.", req: { level: 4, stat: { AGI: 13 } } },
-  { id: "sprint-intervals", line: "AGI", node: "II", pro: true, name: "Sprint Intervals", desc: "Adds short sprint sessions. Rank Battle: Blitz Dash.", req: { level: 12, stat: { AGI: 24 } } },
-  { id: "mobility-reset", line: "VIT", node: "I", name: "Mobility Reset", desc: "Adds short mobility flows. Rank Battle: Flow Mend.", req: { level: 2, stat: { VIT: 11 } } },
-  { id: "deload-week", line: "VIT", node: "II", pro: true, name: "Deload Week", desc: "Adds a lighter recovery week. Rank Battle: Soft Reset.", req: { level: 8, stat: { VIT: 18 } } },
+  { id: "iron-core", line: "STR", node: "I", name: "Iron Core I", desc: "Rank Battle: Iron Guard.", req: { level: 2, stat: { STR: 11 } } },
+  { id: "push-mastery", line: "STR", node: "II", pro: true, name: "Push Mastery", desc: "Harder push-up tips in training. Rank Battle: Crushing Blow.", req: { level: 6, stat: { STR: 16 } } },
+  { id: "loaded-carry", line: "STR", node: "III", pro: true, name: "Loaded Carry", desc: "Rank Battle: Burden Slam.", req: { level: 15, stat: { STR: 30 }, equip: "dumbbells" } },
+  { id: "barbell-basics", line: "STR", node: "IV", pro: true, name: "Barbell Basics", desc: "Rank Battle: Bar Drop.", req: { level: 20, stat: { STR: 36 }, equip: "gym" } },
+  { id: "engine-room", line: "END", node: "I", name: "Engine Room", desc: "Rank Battle: Overheat Burst.", req: { level: 3, stat: { END: 12 } } },
+  { id: "5k-builder", line: "END", node: "II", pro: true, name: "5K Builder", desc: "Rank Battle: Steady Burn.", req: { level: 10, stat: { END: 22 } } },
+  { id: "spring-step", line: "AGI", node: "I", name: "Spring Step", desc: "Rank Battle: Spring Strike.", req: { level: 4, stat: { AGI: 13 } } },
+  { id: "sprint-intervals", line: "AGI", node: "II", pro: true, name: "Sprint Intervals", desc: "Rank Battle: Blitz Dash.", req: { level: 12, stat: { AGI: 24 } } },
+  { id: "mobility-reset", line: "VIT", node: "I", name: "Mobility Reset", desc: "Rank Battle: Flow Mend.", req: { level: 2, stat: { VIT: 11 } } },
+  { id: "deload-week", line: "VIT", node: "II", pro: true, name: "Deload Week", desc: "Rank Battle: Soft Reset.", req: { level: 8, stat: { VIT: 18 } } },
   { id: "early-riser", line: "DIS", node: "I", name: "Title: Early Riser", title: "Early Riser", desc: "Title. +5% XP while equipped.", req: { stat: { DIS: 12 }, early: 3 } },
   { id: "week-warrior", line: "DIS", node: "II", name: "Title: Week Warrior", title: "Week Warrior", desc: "Title. +5% XP while equipped.", req: { streak: 7 } },
   { id: "streak-30", line: "DIS", node: "III", pro: true, name: "Title: 30-Day Streak", title: "30-Day Streak", desc: "Title. +5% XP while equipped.", req: { streak: 30, stat: { DIS: 20 } } }

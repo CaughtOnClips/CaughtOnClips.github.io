@@ -24,8 +24,8 @@ const LEVELS = [["Beginner", "New or returning to training", "🌱"], ["Intermed
 const EQUIPS = [["none", "No equipment", "🏠", "Bodyweight at home, park or hotel"], ["dumbbells", "Dumbbells", "🫳", "A pair of dumbbells (and bodyweight)"], ["gym", "Full gym", "🏟️", "Barbells, machines, cables, everything"]];
 const equipRank = { none: 0, dumbbells: 1, gym: 2 };
 const has = id => S.game.skills.includes(id);
-const allPlans = () => PLANS.concat(GM.SKILL_PLANS.filter(p => has(p.skill)));
-const availablePlans = (eq = S.profile.equip || "gym") => allPlans().filter(p => equipRank[p.equip] <= equipRank[eq]);
+const allPlans = () => PLANS.concat(GM.SKILL_PLANS);
+const availablePlans = (_eq = S.profile.equip || "gym") => allPlans();
 const planById = id => PLANS.concat(GM.SKILL_PLANS).find(p => p.id === id);
 const fmtTime = s => { s = Math.max(0, Math.round(s)); const m = Math.floor(s / 60), x = s % 60; return m + ":" + String(x).padStart(2, "0"); };
 const repRange = e => { if (!e.rr) return null; const [lo, hi] = String(e.rr).split("-").map(Number); return e.r >= lo && e.r <= hi ? lo + "–" + hi : null; };
@@ -221,7 +221,7 @@ function showQueue() {
   else if (n.kind === "quest") { title = "Daily quest"; label = "Quest clear"; line = "The work counted."; chips = chip(`+${n.xp} XP`, true) + chip(`+${n.points} attribute pts`) + chip(`Streak ${n.streakFrom} → ${n.streakTo}`, true) + (n.dis ? chip(`DIS +${n.dis}`, true) : "") + (n.comeback ? chip("Comeback bonus ×1.5", true) : ""); }
   else if (n.kind === "xp") { title = "Session complete"; label = "XP gained"; big = `+${n.xp}`; line = `${h(n.title)} · ${n.sets} sets logged.${n.capped ? " Daily XP cap reached; extra reps still count for stats." : ""}`; chips = boostChips(n.boosts); }
   else if (n.kind === "ach") { title = "Achievement"; label = h(n.name); line = h(n.desc); chips = n.xp ? chip(`+${n.xp} XP`, true) : ""; }
-  else if (n.kind === "skill-ready") { const nm = n.names || [n.name]; title = "Skills"; label = nm.length > 1 ? `${nm.length} skills ready` : "Skill ready"; line = "New programs can be unlocked in Skills."; chips = nm.map(x => chip(h(x), true)).join(""); primary = ["Open skills", "#/skills"]; later = true; }
+  else if (n.kind === "skill-ready") { const nm = n.names || [n.name]; title = "Skills"; label = nm.length > 1 ? `${nm.length} skills ready` : "Skill ready"; line = "New battle specials can be learned in Skills."; chips = nm.map(x => chip(h(x), true)).join(""); primary = ["Open skills", "#/skills"]; later = true; }
   else if (n.kind === "skill") { title = "Skills"; label = "Skill unlocked"; line = `${h(n.name)}. ${h(n.desc)}`; }
   else if (n.kind === "rankup") { title = "Rank"; label = `Rank ${n.r.k}: ${n.r.name}`; big = `<span class="rank-badge" data-rank="${n.r.k}" style="width:72px;height:80px;font-size:34px">${n.r.k}</span>`; line = "Harder quests are now open to you."; }
   else if (n.kind === "class-ready") { title = "Class change"; label = "Trial clear"; line = "You've proven the work. Choose your class."; primary = ["Choose class", "#/quests"]; }
@@ -295,7 +295,7 @@ VIEWS.welcome = () => {
     <img class="logo" src="icons/icon-192.png" alt="${h(NAME)}">
     <div class="system-window"><div class="system-window__title">Notice</div>
       <p class="center hud" style="font-size:22px">Enter the Forge</p>
-      <p class="center">Your training is the game. Every rep earns XP, every level gives you points to spend, and every skill unlocks a new plan.</p>
+      <p class="center">Your training is the game. Every rep earns XP, every level gives you points to spend, and every skill unlocks a new battle special.</p>
       <p class="center muted small">Free test version. Your data stays on this phone. No account needed.</p>
       <button class="btn" id="start">Begin</button></div>
     <p class="small muted center">Tip: in Safari tap Share › Add to Home Screen to use ${h(NAME)} like an app.</p></div>`;
@@ -306,7 +306,7 @@ VIEWS.onboard = (step = "0") => {
   const steps = [
     { key: "goal", title: "Choose your goal", sub: "What do you want the work to build?", opts: GOALS.map(([v, l, i, d]) => [v, l, i, d]) },
     { key: "level", title: "Set your level", sub: "Your Daily Quest scales from this.", opts: LEVELS.map(([v, d, i]) => [v, v, i, d]) },
-    { key: "equip", title: "Check your gear", sub: "Plans are filtered by what you have.", opts: EQUIPS.map(([v, l, i, d]) => [v, l, i, d]) }
+    { key: "equip", title: "Check your gear", sub: "We'll highlight plans that match your gear. Every plan is open from the start.", opts: EQUIPS.map(([v, l, i, d]) => [v, l, i, d]) }
   ];
   const prog = `<div class="progress">${[0, 1, 2, 3, 4].map(i => `<i class="${i <= step ? "on" : ""}"></i>`).join("")}</div>`;
   const top = `<div class="top"><button class="iconbtn" id="back" aria-label="Back">‹</button><span class="spacer"></span><span class="label">Setup ${step + 1} / 5</span></div>`;
@@ -409,17 +409,14 @@ let planFilter = null;
 VIEWS.plans = () => {
   setTabs("plans");
   const eq = S.profile.equip; if (!planFilter) planFilter = "all";
-  const avail = availablePlans(eq);
-  const cats = [["all", "All for me"], ...["none", "dumbbells", "gym"].filter(k => equipRank[k] <= equipRank[eq]).map(k => [k, EQL[k]])];
+  const avail = allPlans();
+  const cats = [["all", "All"], ...["none", "dumbbells", "gym"].map(k => [k, EQL[k]])];
   const list = planFilter === "all" ? avail : avail.filter(p => p.equip === planFilter);
-  const locked = GM.SKILL_PLANS.filter(bp => !has(bp.skill));
-  app.innerHTML = `<div class="top"><h1>Plans</h1><span class="spacer"></span><a class="btn sm ghost" href="#/routines">My routines</a></div><p class="muted">Showing plans for: <b style="color:var(--color-text)">${h(EQL[eq])}</b>. <a href="#/settings">Change</a></p>
+  app.innerHTML = `<div class="top"><h1>Plans</h1><span class="spacer"></span><a class="btn sm ghost" href="#/routines">My routines</a></div><p class="muted">Every plan is open. Your gear: <b style="color:var(--color-text)">${h(EQL[eq] || "not set")}</b>. <a href="#/settings">Change</a></p>
     <div class="chips" role="tablist">${cats.map(([k, l]) => `<button class="chip ${planFilter === k ? "on" : ""}" data-k="${k}" role="tab" aria-selected="${planFilter === k}">${h(l)}</button>`).join("")}</div>
-    ${list.map(p => `<a class="card" href="#/plan/${p.id}"><div class="row between"><h3 style="margin:0">${h(p.name)}</h3>${p.pro ? `<span class="pill volt">PRO</span>` : p.skill ? `<span class="pill good">Skill</span>` : ""}</div>
+    ${list.map(p => `<a class="card" href="#/plan/${p.id}"><div class="row between"><h3 style="margin:0">${h(p.name)}</h3>${p.pro ? `<span class="pill volt">PRO</span>` : ""}</div>
       <div class="meta"><span class="pill">${p.weeks} weeks</span><span class="pill">${p.perWeek}×/week</span><span class="pill">${h(p.level)}</span><span class="pill">${h(EQL[p.equip])}</span></div>
       <p class="muted small" style="margin:0">${h(p.blurb)}</p></a>`).join("")}
-    ${locked.length ? `<h2 style="margin-top:22px">Unlock with skills</h2>` + locked.map(bp => { const sk = GM.SKILLS.find(x => x.id === bp.skill); return `<a class="card" href="#/skills" style="opacity:.8"><div class="row between"><h3 style="margin:0">🔒 ${h(bp.name)}</h3><span class="pill locked">Skill: ${h(sk.name)}</span></div><p class="muted small" style="margin:6px 0 0">${h(bp.blurb)}</p><p class="small" style="margin:6px 0 0">Requires: ${reqList(sk.req).map(r => `<span style="color:${r.met ? "var(--color-success)" : "var(--color-text-muted)"}">${h(r.l)}</span>`).join(" · ")}</p></a>`; }).join("") : ""}
-    ${PLANS.length > availablePlans(eq).filter(x => PLANS.includes(x)).length ? `<p class="small muted center" style="margin-top:16px">More plans need equipment you haven't selected.</p>` : ""}
     <p class="small muted center">PRO plans are free during testing.</p>`;
   app.querySelectorAll(".chip").forEach(c => c.onclick = () => { planFilter = c.dataset.k; VIEWS.plans(); });
 };
@@ -1098,7 +1095,7 @@ VIEWS.skills = () => {
   const lines = ["STR", "END", "AGI", "VIT", "DIS"];
   app.innerHTML = `${hudTop()}
     <div class="system-window"><div class="system-window__title">Skills</div>
-      <p class="small muted center" style="margin-top:-6px">Skills unlock programs and titles. Learned ${G.skills.length} / ${GM.SKILLS.length}. The first node of each line is free; PRO nodes are free during testing.</p>
+      <p class="small muted center" style="margin-top:-6px">Skills unlock Rank Battle specials and titles. Learned ${G.skills.length} / ${GM.SKILLS.length}. The first node of each line is free; PRO nodes are free during testing.</p>
       ${lines.map(L => `<div class="skline"><div class="label">${L} line</div>${GM.SKILLS.filter(sk => sk.line === L).map(sk => { const learned = has(sk.id), ready = skillReady(sk), req = reqList(sk.req);
         return `<div class="skill"><div class="hex ${learned ? "on" : ""}">${sk.node}</div><div><b>${h(sk.name)}</b><span>${h(sk.desc)}</span>
           ${learned ? "" : `<span class="req">${req.map(r => `<i class="${r.met ? "met" : ""}">${r.met ? "✓" : "○"} ${h(r.l)}</i>`).join("")}</span>`}
@@ -1108,8 +1105,7 @@ VIEWS.skills = () => {
   app.querySelectorAll("[data-learn]").forEach(b => b.onclick = () => {
     const sk = GM.SKILLS.find(x => x.id === b.dataset.learn); if (!skillReady(sk)) return;
     G.skills.push(sk.id); if (sk.title) G.title = sk.title;
-    const plan = GM.SKILL_PLANS.find(p => p.skill === sk.id);
-    queue({ kind: "skill", name: sk.name, desc: plan ? `${plan.name} plan added to Plans.` : sk.desc }); checkProgress(); save(); render();
+    queue({ kind: "skill", name: sk.name, desc: sk.desc }); checkProgress(); save(); render();
   });
   app.querySelectorAll("[data-title]").forEach(b => b.onclick = () => { G.title = b.dataset.title; save(); VIEWS.skills(); });
 };
