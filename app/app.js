@@ -21,12 +21,13 @@ const onboarded = () => !!S.profile.agreedAt;
 // ---------- Helpers ----------
 const GOALS = [["strength", "Build strength", "💪", "Get stronger on the basics"], ["fat", "Lose fat", "🔥", "Burn more and move more"], ["fit", "Get fit", "⚡", "Feel better, move better"], ["muscle", "Build muscle", "🏋️", "Add size and shape"]];
 const LEVELS = [["Beginner", "New or returning to training", "🌱"], ["Intermediate", "Training regularly for 6+ months", "📈"], ["Advanced", "Years of consistent training", "🏆"]];
-const EQUIPS = [["none", "No equipment", "🏠", "Bodyweight at home, park or hotel"], ["dumbbells", "Dumbbells", "🫳", "A pair of dumbbells (and bodyweight)"], ["gym", "Full gym", "🏟️", "Barbells, machines, cables, everything"]];
-const equipRank = { none: 0, dumbbells: 1, gym: 2 };
+const EQUIPS = [["none", "No equipment", "🏠", "Bodyweight at home, park or hotel"], ["dumbbells", "Dumbbells", "🫳", "A pair of dumbbells (and bodyweight)"], ["gym", "Full gym", "🏟️", "Barbells, machines, cables, everything"], ["kettlebells", "Kettlebells", "🔔", "One or two kettlebells (and bodyweight)"]];
+const equipRank = { none: 0, kettlebells: 0, dumbbells: 1, gym: 2 }; // kettlebells rank 0 so battle-skill gear gates are unchanged
 const has = id => S.game.skills.includes(id);
-const allPlans = () => PLANS.concat(GM.SKILL_PLANS);
+const LIBP = window.HG_LIB_PLANS || [];
+const allPlans = () => PLANS.concat(GM.SKILL_PLANS, LIBP);
 const availablePlans = (_eq = S.profile.equip || "gym") => allPlans();
-const planById = id => PLANS.concat(GM.SKILL_PLANS).find(p => p.id === id);
+const planById = id => allPlans().find(p => p.id === id);
 const fmtTime = s => { s = Math.max(0, Math.round(s)); const m = Math.floor(s / 60), x = s % 60; return m + ":" + String(x).padStart(2, "0"); };
 const repRange = e => { if (!e.rr) return null; const [lo, hi] = String(e.rr).split("-").map(Number); return e.r >= lo && e.r <= hi ? lo + "–" + hi : null; };
 const eachLbl = e => e.side ? " each " + (e.each === "arm" || e.each === "leg" ? e.each : "side") : "";
@@ -189,7 +190,7 @@ function awardWorkout(entry, ref) {
   const bonus = entry.setsDone ? SESSION_BONUS + (ref.kind === "plan" ? PLAN_BONUS : 0) : 0;
   G.totalSets += entry.setsDone;
   const boosts = {};
-  for (const e of entry.ex) { if (!e.sets.length) continue; const st = GM.statFor(e.n); const g = train(st, e.sets.length); if (g) boosts[st] = (boosts[st] || 0) + g;
+  for (const e of entry.ex) { if (!e.sets.length) continue; const st = e.st || GM.statFor(e.n); const g = train(st, e.sets.length); if (g) boosts[st] = (boosts[st] || 0) + g;
     for (const it of G.daily.items) if (new RegExp(it.match, "i").test(e.n) && it.timed === !!e.timed) addDaily(it.id, e.timed ? e.sets.reduce((a, x) => a + (x.sec || 0), 0) : e.sets.reduce((a, x) => a + (x.reps || 0), 0), true); }
   if (entry.setsDone) markActive();
   const passed = entry.setsTotal && entry.setsDone / entry.setsTotal >= 0.8;
@@ -248,12 +249,24 @@ function showQueue() {
 }
 
 // ---------- Modal ----------
-function sheet(html, onMount) {
-  modalRoot.innerHTML = `<div class="sheet-bg" data-close><div class="sheet" role="dialog" aria-modal="true">${html}</div></div>`;
-  const bg = modalRoot.firstChild; bg.addEventListener("click", e => { if (e.target === bg || e.target.closest("[data-close-btn]")) closeSheet(); });
-  onMount && onMount(bg.firstChild);
+let sheetReturn = null;
+function sheet(html, onMount, label) {
+  if (!modalRoot.firstChild) sheetReturn = document.activeElement;
+  modalRoot.innerHTML = `<div class="sheet-bg" data-close><div class="sheet" role="dialog" aria-modal="true" ${label ? `aria-label="${h(label)}"` : ""} tabindex="-1">${html}</div></div>`;
+  const bg = modalRoot.firstChild, sh = bg.firstChild; bg.addEventListener("click", e => { if (e.target === bg || e.target.closest("[data-close-btn]")) closeSheet(); });
+  bg.addEventListener("keydown", e => {
+    if (e.key === "Escape") { e.preventDefault(); closeSheet(); return; }
+    if (e.key !== "Tab") return;
+    const f = [...sh.querySelectorAll('a[href],button:not([disabled]),input,select,textarea,[tabindex]:not([tabindex="-1"])')].filter(x => x.offsetParent !== null);
+    if (!f.length) { e.preventDefault(); return; }
+    const first = f[0], last = f[f.length - 1];
+    if (e.shiftKey && (document.activeElement === first || document.activeElement === sh)) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+  });
+  onMount && onMount(sh);
+  if (!sh.contains(document.activeElement)) { const first = sh.querySelector("[data-close-btn], button, a[href], input"); (first || sh).focus({ preventScroll: true }); }
 }
-const closeSheet = () => { modalRoot.innerHTML = ""; };
+const closeSheet = () => { const had = !!modalRoot.firstChild; modalRoot.innerHTML = ""; if (had && sheetReturn && document.contains(sheetReturn)) { try { sheetReturn.focus({ preventScroll: true }); } catch (e) {} } sheetReturn = null; };
 function confirmSheet(title, body, okLabel, onOk, danger) {
   sheet(`<h2>${h(title)}</h2><p class="muted">${body}</p><div class="stack"><button class="btn ${danger ? "danger" : ""}" id="ok">${h(okLabel)}</button><button class="btn ghost" data-close-btn>Cancel</button></div>`,
     el => $("#ok", el).onclick = () => { closeSheet(); onOk(); });
@@ -262,7 +275,7 @@ function confirmSheet(title, body, okLabel, onOk, danger) {
 // ---------- Router ----------
 const go = r => { location.hash = r; };
 window.addEventListener("hashchange", render);
-const TABS = [["home", "Status", "◈"], ["quests", "Quests", "❖"], ["battle", "Battle", "⚔"], ["plans", "Plans", "▤"], ["skills", "Skills", "✦"], ["history", "Log", "◷"]];
+const TABS = [["home", "Status", "◈"], ["quests", "Quests", "❖"], ["battle", "Battle", "⚔"], ["plans", "Workouts", "▤"], ["skills", "Skills", "✦"], ["history", "Log", "◷"]];
 function setTabs(active) {
   if (!active) { tabs.hidden = true; document.body.classList.add("no-tabs"); return; }
   document.body.classList.remove("no-tabs"); tabs.hidden = false;
@@ -405,20 +418,48 @@ VIEWS.home = () => {
   clearInterval(ticker); ticker = setInterval(() => { const r = $("[data-reset]"); if (r) r.textContent = resetIn(); }, 1000);
 };
 
-let planFilter = null;
+let planFilter = null, wkEquip = "all", wkLevel = "all", planMode = "workouts";
+const LVL_ORDER = { Beginner: 0, Intermediate: 1, Advanced: 2, "All levels": 3 };
+const EQ_ORDER = { none: 0, dumbbells: 1, gym: 2, kettlebells: 3 };
+const EQ_KEYS = ["none", "dumbbells", "gym", "kettlebells"];
+const focusOf = w => w.focus || (/(hiit|interval|circuit|engine|sprint|5k|run|plyo|carry)/i.test(w.name) ? "Conditioning" : /core/i.test(w.name) ? "Core" : /(mobility|flow|reset|hips|stretch|easy)/i.test(w.name) ? "Mobility" : /push/i.test(w.name) ? "Push" : /(pull|back)/i.test(w.name) ? "Pull" : /(leg|lower)/i.test(w.name) ? "Lower" : /upper/i.test(w.name) ? "Upper" : "Full body");
+function allWorkouts() {
+  const out = [];
+  for (const p of allPlans()) for (const w of p.workouts) out.push({ p, w, equip: p.equip, level: w.level || p.level, focus: focusOf(w) });
+  return out.sort((a, b) => (EQ_ORDER[a.equip] - EQ_ORDER[b.equip]) || (LVL_ORDER[a.level] - LVL_ORDER[b.level]) || (b.p.lib ? 1 : 0) - (a.p.lib ? 1 : 0));
+}
 VIEWS.plans = () => {
   setTabs("plans");
   const eq = S.profile.equip; if (!planFilter) planFilter = "all";
-  const avail = allPlans();
-  const cats = [["all", "All"], ...["none", "dumbbells", "gym"].map(k => [k, EQL[k]])];
-  const list = planFilter === "all" ? avail : avail.filter(p => p.equip === planFilter);
-  app.innerHTML = `<div class="top"><h1>Plans</h1><span class="spacer"></span><a class="btn sm ghost" href="#/routines">My routines</a></div><p class="muted">Every plan is open. Your gear: <b style="color:var(--color-text)">${h(EQL[eq] || "not set")}</b>. <a href="#/settings">Change</a></p>
-    <div class="chips" role="tablist">${cats.map(([k, l]) => `<button class="chip ${planFilter === k ? "on" : ""}" data-k="${k}" role="tab" aria-selected="${planFilter === k}">${h(l)}</button>`).join("")}</div>
-    ${list.map(p => `<a class="card" href="#/plan/${p.id}"><div class="row between"><h3 style="margin:0">${h(p.name)}</h3>${p.pro ? `<span class="pill volt">PRO</span>` : ""}</div>
-      <div class="meta"><span class="pill">${p.weeks} weeks</span><span class="pill">${p.perWeek}×/week</span><span class="pill">${h(p.level)}</span><span class="pill">${h(EQL[p.equip])}</span></div>
-      <p class="muted small" style="margin:0">${h(p.blurb)}</p></a>`).join("")}
-    <p class="small muted center">PRO plans are free during testing.</p>`;
-  app.querySelectorAll(".chip").forEach(c => c.onclick = () => { planFilter = c.dataset.k; VIEWS.plans(); });
+  const seg = `<div class="seg" role="tablist" aria-label="View"><button class="${planMode === "workouts" ? "on" : ""}" data-mode="workouts" role="tab" aria-selected="${planMode === "workouts"}">Workouts</button><button class="${planMode === "programs" ? "on" : ""}" data-mode="programs" role="tab" aria-selected="${planMode === "programs"}">Programs</button><a href="#/routines">My routines</a></div>`;
+  const head = `<div class="top"><h1>Workouts</h1><span class="spacer"></span></div>`;
+  if (planMode === "workouts") {
+    const all = allWorkouts();
+    const list = all.filter(x => (wkEquip === "all" || x.equip === wkEquip) && (wkLevel === "all" || x.level === wkLevel || x.level === "All levels"));
+    const eqCats = [["all", "All"], ...EQ_KEYS.map(k => [k, EQL[k]])], lvCats = [["all", "All levels"], ["Beginner", "Beginner"], ["Intermediate", "Intermediate"], ["Advanced", "Advanced"]];
+    const cnt = k => all.filter(x => (k === "all" || x.equip === k) && (wkLevel === "all" || x.level === wkLevel || x.level === "All levels")).length;
+    app.innerHTML = `${head}${seg}<p class="muted small" style="margin:10px 0 8px">Every workout is open. Your gear: <b style="color:var(--color-text)">${h(EQL[eq] || "not set")}</b>. <a href="#/settings">Change</a></p>
+      <div class="filterlbl">Equipment</div><div class="chips" role="group" aria-label="Equipment">${eqCats.map(([k, l]) => `<button class="chip ${wkEquip === k ? "on" : ""}" data-eq="${k}" aria-pressed="${wkEquip === k}">${h(l)} <span class="cnt">${cnt(k)}</span></button>`).join("")}</div>
+      <div class="filterlbl">Level</div><div class="chips" role="group" aria-label="Level">${lvCats.map(([k, l]) => `<button class="chip ${wkLevel === k ? "on" : ""}" data-lv="${k}" aria-pressed="${wkLevel === k}">${h(l)}</button>`).join("")}</div>
+      <p class="wkcount" id="wkcount" aria-live="polite"><b>${list.length}</b> workout${list.length === 1 ? "" : "s"}${list.length !== all.length ? ` of ${all.length}` : " total"}</p>
+      <div class="wklist">${list.map(x => `<a class="card wkcard" href="#/workout/${x.p.id}/${x.w.id}" data-wid="${h(x.w.id)}"><div class="row between"><h3 style="margin:0">${h(x.w.name)}</h3><span class="muted small">~${x.w.mins} min</span></div>
+        <div class="meta"><span class="pill lvl-${h(x.level.split(" ")[0].toLowerCase())}">${h(x.level)}</span><span class="pill">${h(EQL[x.equip])}</span><span class="pill">${h(x.focus)}</span></div>
+        <p class="muted small" style="margin:0">${h(x.w.desc || `${x.w.ex.length} exercises · from ${x.p.name}`)}</p></a>`).join("") || `<p class="muted center">No workouts match these filters.</p>`}</div>`;
+    app.querySelectorAll("[data-eq]").forEach(c => c.onclick = () => { wkEquip = c.dataset.eq; VIEWS.plans(); });
+    app.querySelectorAll("[data-lv]").forEach(c => c.onclick = () => { wkLevel = c.dataset.lv; VIEWS.plans(); });
+  } else {
+    const avail = allPlans().filter(p => !p.lib);
+    const cats = [["all", "All"], ...EQ_KEYS.filter(k => avail.some(p => p.equip === k)).map(k => [k, EQL[k]])];
+    const list = planFilter === "all" ? avail : avail.filter(p => p.equip === planFilter);
+    app.innerHTML = `${head}${seg}<p class="muted small" style="margin:10px 0 8px">Multi-week programs. Every program is open.</p>
+      <div class="chips" role="group" aria-label="Equipment">${cats.map(([k, l]) => `<button class="chip ${planFilter === k ? "on" : ""}" data-k="${k}" aria-pressed="${planFilter === k}">${h(l)}</button>`).join("")}</div>
+      ${list.map(p => `<a class="card" href="#/plan/${p.id}"><div class="row between"><h3 style="margin:0">${h(p.name)}</h3>${p.pro ? `<span class="pill volt">PRO</span>` : ""}</div>
+        <div class="meta"><span class="pill">${p.weeks} weeks</span><span class="pill">${p.perWeek}×/week</span><span class="pill">${h(p.level)}</span><span class="pill">${h(EQL[p.equip])}</span></div>
+        <p class="muted small" style="margin:0">${h(p.blurb)}</p></a>`).join("")}
+      <p class="small muted center">PRO plans are free during testing.</p>`;
+    app.querySelectorAll("[data-k]").forEach(c => c.onclick = () => { planFilter = c.dataset.k; VIEWS.plans(); });
+  }
+  app.querySelectorAll("[data-mode]").forEach(b => b.onclick = () => { planMode = b.dataset.mode; VIEWS.plans(); });
 };
 VIEWS.plan = id => {
   setTabs("plans"); const p = planById(id); if (!p) return go("/plans");
@@ -438,13 +479,15 @@ VIEWS.workout = (pid, wid) => {
   setTabs(null);
   const p = planById(pid), w = p && p.workouts.find(x => x.id === wid);
   if (!w) return go("/plans");
-  startPreview(w.name, p.name, w.ex, { kind: "plan", planId: p.id, workoutId: w.id }, `#/plan/${p.id}`);
+  startPreview(w.name, p.lib ? `${EQL[p.equip]} · ${w.level || p.level} · ${focusOf(w)} · ~${w.mins} min` : p.name, w.ex, { kind: "plan", planId: p.id, workoutId: w.id }, p.lib ? "#/plans" : `#/plan/${p.id}`, w);
 };
-function startPreview(title, sub, ex, ref, back) {
+function startPreview(title, sub, ex, ref, back, w) {
   app.innerHTML = `<div class="top"><a class="iconbtn" href="${back}" aria-label="Back">‹</a></div>
     <p class="muted" style="margin:0">${h(sub)}</p><h1>${h(title)}</h1>
-    <p class="muted">${ex.length} exercises · ${ex.reduce((a, e) => a + e.s, 0)} sets</p>
-    <div class="card"><ul class="exlist">${ex.map((e, i) => `<li><b>${i + 1}. ${h(e.n)}</b><div class="muted small">${e.s} × ${exTarget(e)} · rest ${e.rest}s</div></li>`).join("")}</ul></div>
+    ${w && w.desc ? `<p>${h(w.desc)}</p>` : ""}<p class="muted">${ex.length} exercises · ${ex.reduce((a, e) => a + e.s, 0)} sets${w ? ` · ~${planXpEstimate(w)} XP` : ""}</p>
+    ${w && w.warm ? `<div class="card wu"><span class="label">Warm-up</span><p class="small" style="margin:4px 0 0">${h(w.warm)}</p></div>` : ""}
+    <div class="card"><ul class="exlist">${ex.map((e, i) => `<li><b>${i + 1}. ${h(e.n)}</b><div class="muted small">${e.s} × ${exTarget(e)} · rest ${e.rest}s</div>${w && w.warm && e.c && e.c[0] ? `<div class="small cue">${h(e.c.join(" · "))}</div>` : ""}</li>`).join("")}</ul></div>
+    ${w && w.cool ? `<div class="card wu"><span class="label">Cool-down</span><p class="small" style="margin:4px 0 0">${h(w.cool)}</p></div>` : ""}
     <div style="height:16px"></div><button class="btn" id="go">Start</button>
     <p class="small muted center" style="margin-top:12px">Warm up for a few minutes first. Stop if anything hurts.</p>`;
   $("#go").onclick = () => {
@@ -468,7 +511,7 @@ VIEWS.train = () => {
   const totalSets = A.log.flat().length, doneSets = A.log.flat().filter(x => x.done).length;
   const unit = S.profile.units, wStep = unit === "kg" ? 2.5 : 5;
   app.innerHTML = `<div class="trainview">
-    <div class="row"><button class="iconbtn" id="end" aria-label="End workout">✕</button><div class="spacer center"><div class="muted small">${h(A.title)}</div><div class="num" id="elapsed" style="font-size:20px">0:00</div></div><button class="iconbtn" id="list" aria-label="All exercises">☰</button></div>
+    <div class="row"><button class="iconbtn" id="end" aria-label="End workout">✕</button><div class="spacer center"><div class="muted small">${h(A.title)}</div><div class="num" id="elapsed" style="font-size:20px">${fmtTime(elapsedSec(A))}</div></div><button class="iconbtn pausebtn" id="pauseBtn" aria-label="${A.paused ? "Resume workout" : "Pause workout"}" aria-pressed="${!!A.paused}">${A.paused ? "▶" : "❚❚"}</button><button class="iconbtn" id="list" aria-label="All exercises">☰</button></div>
     <div class="pbar" aria-label="Progress"><i style="width:${(doneSets / totalSets * 100).toFixed(0)}%"></i></div>
     <div class="muted small">Exercise ${A.i + 1} of ${A.ex.length}</div>
     <div class="exname">${h(e.n)}</div>
@@ -488,7 +531,7 @@ VIEWS.train = () => {
         : `<button class="btn" id="doneSet">✓ Set done</button>`}
       <div class="row"><button class="btn sm ghost" style="flex:1" id="prev" ${A.i === 0 ? "disabled" : ""}>‹ Prev</button><button class="btn sm ghost" style="flex:1" id="skip">${A.i < A.ex.length - 1 ? "Skip ›" : "Finish"}</button></div>
     </div></div>
-    ${A.rest ? restHTML() : ""}`;
+    ${A.rest ? restHTML() : ""}${A.paused ? pausedHTML() : ""}`;
   // handlers
   app.querySelectorAll("[data-adj]").forEach(b => b.onclick = () => {
     const k = b.dataset.adj, d = +b.dataset.d; cur[k] = Math.max(0, Math.round(((cur[k] || 0) + d) * 10) / 10);
@@ -511,28 +554,54 @@ VIEWS.train = () => {
     save(); VIEWS.train();
   };
   bindRest();
+  app.querySelectorAll("#pauseBtn, #rpause").forEach(b => b.onclick = () => { A.paused ? resumeWorkout() : pauseWorkout(); });
+  if ($("#presume")) { $("#presume").onclick = resumeWorkout; $("#presume").focus(); }
+  if ($("#pend")) $("#pend").onclick = endPrompt;
   clearInterval(ticker); ticker = setInterval(tick, 250); tick();
 };
+// Pause: stored on S.active (localStorage), so it survives reloads and backgrounding. Logged time excludes paused time.
+function elapsedSec(A) { const now = A.endedAt || (A.paused ? A.paused.at : Date.now()); return Math.max(0, (now - A.startedAt - (A.pausedMs || 0)) / 1000); }
+function pauseWorkout() {
+  const A = S.active; if (!A || A.paused) return; const now = Date.now();
+  A.paused = { at: now };
+  if (A.rest) A.rest.left = Math.max(0, A.rest.until - now);
+  if (A.timer && A.timer.running) { A.timer.before += (now - A.timer.startedAt) / 1000; A.timer.running = false; A.timer.auto = true; }
+  save(); VIEWS.train();
+}
+function resumeWorkout() {
+  const A = S.active; if (!A || !A.paused) return; const now = Date.now();
+  A.pausedMs = (A.pausedMs || 0) + (now - A.paused.at); A.paused = null;
+  if (A.rest && A.rest.left != null) { A.rest.until = now + A.rest.left; delete A.rest.left; }
+  if (A.timer && A.timer.auto) { A.timer.startedAt = now; A.timer.running = true; delete A.timer.auto; }
+  save(); VIEWS.train();
+}
+function pausedHTML() {
+  return `<div class="pausedov" role="dialog" aria-modal="true" aria-labelledby="pausedT"><div class="system-window center" style="width:100%;max-width:420px">
+    <div class="system-window__title" id="pausedT">Paused</div><div class="big num" id="pausedTime">${fmtTime(elapsedSec(S.active))}</div>
+    <p class="muted small">Workout time${S.active.rest ? " and your rest timer are" : " is"} frozen. Paused time won't count toward your logged duration.</p>
+    <button class="btn" id="presume">▶ Resume</button><button class="btn ghost" id="pend" style="margin-top:10px">End workout</button></div></div>`;
+}
 function timerLeft() { const T = S.active.timer; if (!T) return 0; const el = T.before + (T.running ? (Date.now() - T.startedAt) / 1000 : 0); return Math.max(0, T.total - el); }
-function restLeft() { const R = S.active.rest; return R ? Math.max(0, (R.until - Date.now()) / 1000) : 0; }
+function restLeft() { const R = S.active.rest; if (!R) return 0; if (S.active.paused && R.left != null) return R.left / 1000; return Math.max(0, (R.until - Date.now()) / 1000); }
 function restHTML() {
   const A = S.active, R = A.rest; const nx = A.ex[R.nextI];
   return `<div class="rest" role="dialog" aria-label="Rest"><div class="center muted">REST</div>
     <div class="ring"><svg width="240" height="240" viewBox="0 0 240 240"><circle class="track" cx="120" cy="120" r="108" stroke-width="14" fill="none"/><circle id="ringp" class="prog" cx="120" cy="120" r="108" stroke-width="14" fill="none" stroke-linecap="round" stroke-dasharray="${2 * Math.PI * 108}" stroke-dashoffset="0"/></svg><div class="big" id="restc">${fmtTime(restLeft())}</div></div>
     <p class="center" style="margin-top:20px"><span class="muted">Up next</span><br><b style="font-size:20px">${h(nx ? nx.n : "")}</b><br><span class="muted">${R.label || ""}</span></p>
     <div class="row" style="margin:18px 0"><button class="btn ghost" id="rminus">−15s</button><button class="btn ghost" id="rplus">+15s</button></div>
-    <button class="btn" id="rskip">Skip rest</button></div>`;
+    <button class="btn" id="rskip">Skip rest</button><button class="btn ghost" id="rpause" style="margin-top:10px">❚❚ Pause workout</button></div>`;
 }
 function bindRest() {
   if (!S.active.rest) return;
-  $("#rplus").onclick = () => { S.active.rest.until += 15000; S.active.rest.total += 15; save(); };
-  $("#rminus").onclick = () => { S.active.rest.until -= 15000; save(); };
+  $("#rplus").onclick = () => { const R = S.active.rest; R.until += 15000; R.total += 15; if (R.left != null) R.left += 15000; save(); };
+  $("#rminus").onclick = () => { const R = S.active.rest; R.until -= 15000; if (R.left != null) R.left = Math.max(0, R.left - 15000); save(); };
   $("#rskip").onclick = endRest;
 }
 function endRest() { const A = S.active; if (!A || !A.rest) return; A.i = A.rest.nextI; A.rest = null; save(); VIEWS.train(); }
 function tick() {
   const A = S.active; if (!A) return;
-  const el = $("#elapsed"); if (el) el.textContent = fmtTime((Date.now() - A.startedAt) / 1000);
+  const el = $("#elapsed"); if (el) el.textContent = fmtTime(elapsedSec(A));
+  if (A.paused) return;
   if (A.rest) {
     const left = restLeft(), c = $("#restc"), rp = $("#ringp");
     if (c) c.textContent = fmtTime(Math.ceil(left));
@@ -568,11 +637,11 @@ function endPrompt() {
     ${done ? `<button class="btn" id="fin">Finish & review</button>` : ""}<button class="btn danger" id="disc">Discard workout</button><button class="btn ghost" data-close-btn>Keep going</button></div>`,
     el => { if ($("#fin", el)) $("#fin", el).onclick = () => { closeSheet(); finish(); }; $("#disc", el).onclick = () => { S.active = null; save(); closeSheet(); go("/home"); }; });
 }
-function finish() { S.active.endedAt = Date.now(); S.active.rest = null; S.active.timer = null; save(); go("/summary"); }
+function finish() { const A = S.active; if (A.paused) { A.pausedMs = (A.pausedMs || 0) + (Date.now() - A.paused.at); A.paused = null; } S.active.endedAt = Date.now(); S.active.rest = null; S.active.timer = null; save(); go("/summary"); }
 
 VIEWS.summary = () => {
   setTabs(null); const A = S.active; if (!A) return go("/home");
-  const dur = Math.round(((A.endedAt || Date.now()) - A.startedAt) / 1000);
+  const dur = Math.round(elapsedSec(A));
   const sets = A.log.flat().filter(x => x.done).length, total = A.log.flat().length;
   const vol = A.log.reduce((a, L, k) => a + L.filter(x => x.done && x.weight).reduce((b, x) => b + x.weight * (x.reps || 0), 0), 0);
   const xpPrev = workoutXpPreview(A);
@@ -583,10 +652,10 @@ VIEWS.summary = () => {
     <div class="stack" style="margin-top:18px"><button class="btn" id="save">Save &amp; claim XP</button><button class="btn ghost" id="back">Back to workout</button><button class="btn danger" id="disc">Discard</button></div>`;
   $("#save").onclick = () => {
     const entry = { id: A.id, date: new Date(A.startedAt).toISOString(), title: A.title, planId: A.ref.planId || null, workoutId: A.ref.workoutId || null, routineId: A.ref.routineId || null, durationSec: dur, setsDone: sets, setsTotal: total, volume: Math.round(vol), units: S.profile.units,
-      ex: A.ex.map((e, k) => ({ n: e.n, timed: !!e.t, sets: A.log[k].filter(x => x.done).map(x => ({ reps: x.reps, sec: x.sec, weight: x.weight })) })) };
+      ex: A.ex.map((e, k) => ({ n: e.n, timed: !!e.t, ...(e.st ? { st: e.st } : {}), sets: A.log[k].filter(x => x.done).map(x => ({ reps: x.reps, sec: x.sec, weight: x.weight })) })) };
     S.history.unshift(entry); const ref = A.ref; S.active = null; save(); awardWorkout(entry, ref); go(ref.kind === "trial" ? "/quests" : "/home");
   };
-  $("#back").onclick = () => { delete A.endedAt; save(); go("/train"); };
+  $("#back").onclick = () => { if (A.endedAt) A.pausedMs = (A.pausedMs || 0) + (Date.now() - A.endedAt); delete A.endedAt; save(); go("/train"); };
   $("#disc").onclick = () => confirmSheet("Discard this workout?", "It won't be saved to your history.", "Discard", () => { S.active = null; save(); go("/home"); }, true);
 };
 
@@ -1210,8 +1279,51 @@ VIEWS.settings = () => {
   document.addEventListener("touchcancel", () => { pulling = false; if (!refreshing) setVisual(0); }, { passive: true });
 })();
 
+
+// ---------- Page guides (ⓘ) ----------
+const GUIDES = {
+  home: ["Status", "Your home base: level, XP and what to train today.", ["The LV badge and gold bar show your level and XP toward the next level.", "Today's session is the next workout from your current plan. Tap Start session to begin.", "If a workout is in progress you can Resume it or Discard it here.", "Your streak and stats grow every time you log a workout or clear the daily quest."]],
+  quests: ["Quests", "Daily goals and trials that earn bonus XP and points.", ["The Daily quest resets every day. Finish all items to clear it for XP and attribute points.", "Clearing quests builds your streak and Discipline (DIS).", "Log a planned Rest day to keep your streak (up to 2 a week).", "Rank and Class Trials appear when you reach the right level.", "Achievements list milestones you've earned."]],
+  battle: ["Rank Battle", "Turn-based boss fights powered by your training.", ["Pick an unlocked boss. New bosses open as you level up.", "Your fighter's power comes from your real stats, so training makes you stronger here.", "Win to earn rewards and unlock the next fights."]],
+  bfight: ["Rank Battle fight", "Your fighter card vs the boss card.", ["Attack deals damage. Defend blocks part of the next hit.", "Skills cost stamina. Learn more in the Skills tab.", "The bars show HP and stamina for both sides.", "Lose? Train a bit, then hit Retry."]],
+  rtrial: ["Rank Trial", "A test to move up a rank.", ["Finish the set work shown to pass the trial.", "Pass to unlock your new rank and harder quests.", "Retry any time if it doesn't go your way."]],
+  plans: ["Workouts", "Every workout in the app, all unlocked.", ["Workouts lists single sessions. Programs lists multi-week plans.", "Filter by Equipment (No equipment, Dumbbells, Full gym, Kettlebells) and by Level.", "The count shows how many workouts match your filters.", "Tap a workout to see the warm-up, exercises and cool-down, then tap Start.", "My routines lets you build and save your own workouts."]],
+  plan: ["Program", "A multi-week plan with several workouts.", ["Each card is one workout in the program, with sets, reps and rest.", "Tap Make this my plan so Status suggests the next workout for you.", "Tap Start workout on any card to train it now."]],
+  workout: ["Workout preview", "Check what's coming before you start.", ["Each line shows sets × reps (or seconds) and rest between sets.", "Do the warm-up first and the cool-down after.", "The XP estimate is what you'll earn if you finish every set.", "Tap Start when you're ready."]],
+  train: ["Workout session", "Log each set as you go.", ["The clock at the top is your workout time. Tap ❚❚ to pause and ▶ to resume. Paused time isn't counted.", "Use − and + to set the reps, time or weight you actually did, then tap ✓ Set done.", "A rest timer starts after each set. Add or cut 15 s, skip it, or pause.", "☰ jumps to any exercise. ✕ ends or discards the workout.", "Read the form cues. Stop if anything hurts."]],
+  summary: ["Session complete", "Review and save your workout.", ["Time is your workout time, not counting pauses.", "Save & claim XP adds the workout to your Log, XP and stats.", "Back to workout returns you to the session if you missed something.", "Discard throws the session away."]],
+  history: ["Log", "Your fighter and your workout history.", ["Choose fighter picks the hero who appears on Status and in Rank Battles.", "Past workouts lists every saved session, newest first.", "Tap a session to see its sets, or delete it."]],
+  session: ["Saved session", "Details of one past workout.", ["The top line shows the date, total time (pauses not counted) and sets.", "Each exercise lists the reps, time or weight you logged per set.", "Delete this entry removes it from your history and stats."]],
+  skills: ["Skills", "Spend progress on Rank Battle specials and titles.", ["Each line (STR, END, AGI, VIT, DIS) has nodes that open as you level and train.", "The list under a skill shows what you still need. ✓ means done.", "Tap Unlock when a skill is ready.", "Pick a Title to show on your profile. Workouts are always unlocked; skills are for battles."]],
+  settings: ["Settings", "Your profile and app options.", ["Goal and Level shape your suggested plan and daily quest.", "Equipment sets your gear. It only highlights matches; every workout stays open.", "Weight units switch between lb and kg.", "Delete my data wipes everything saved on this phone."]],
+  routines: ["My routines", "Build your own workouts.", ["Tap + New routine and add exercises from the library.", "Set sets, reps or time, and rest for each exercise.", "Tap Start to run a routine like any other workout."]],
+  redit: ["Edit routine", "Change a custom workout.", ["Name your routine so it's easy to find.", "Add exercises from the library, then set sets, reps or time, and rest.", "Save when you're done, or delete the routine."]],
+  rstart: ["Start routine", "Preview your routine.", ["Each line shows sets × reps (or seconds) and rest.", "Warm up for a few minutes first.", "Tap Start to begin and log your sets."]],
+  pro: ["Pro", "What a future Pro plan would include.", ["Pro would add extra content like trials and advanced quests.", "Everything is free during testing.", "Pro never sells XP or stats. Power comes from training."]],
+  welcome: ["Welcome", "Start your Hardgrain save.", ["Tap Begin to set up your profile.", "Your training earns XP, levels and stats.", "Your data stays on this phone. No account needed."]],
+  onboard: ["Setup", "Tell Hardgrain about you.", ["Pick the option that fits best, then tap Continue.", "You can change any answer later in Settings.", "Every workout is open no matter what you pick."]],
+  disclaimer: ["Before you start", "A quick safety note.", ["Read the safety points.", "Confirm, then tap the button to start.", "Scale down, rest or skip whenever you need to."]]
+};
+GUIDES.ctrial = GUIDES.rtrial;
+function openGuide(k) {
+  const g = GUIDES[k]; if (!g) return;
+  sheet(`<div class="row between"><h2 style="margin:0" id="guideT">ⓘ ${h(g[0])}</h2><button class="iconbtn" data-close-btn aria-label="Close guide">✕</button></div>
+    <p class="muted" style="margin:8px 0 4px">${h(g[1])}</p><ul class="cues guide">${g[2].map(x => `<li>${h(x)}</li>`).join("")}</ul>
+    <button class="btn ghost" data-close-btn style="margin-top:8px">Got it</button>`, null, `${g[0]} guide`);
+}
+function addInfoBtn(k) {
+  if (!GUIDES[k] || app.querySelector(".infobtn")) return;
+  const b = document.createElement("button");
+  b.className = "infobtn"; b.type = "button"; b.setAttribute("aria-label", `About this page: ${GUIDES[k][0]}`); b.textContent = "i";
+  b.onclick = () => openGuide(k);
+  const host = app.querySelector(".trainview > .row") || app.querySelector(".hudtop") || app.querySelector(".top");
+  if (host && host.id !== "app") { const before = host.querySelector("#list"); before ? host.insertBefore(b, before) : host.appendChild(b); }
+  else { const bar = document.createElement("div"); bar.className = "infobar"; bar.appendChild(b); app.insertBefore(bar, app.firstChild); }
+}
+Object.keys(VIEWS).forEach(k => { const f = VIEWS[k]; VIEWS[k] = (...a) => { const r = f(...a); try { addInfoBtn(k); } catch (e) {} return r; }; });
+
 // ---------- Boot ----------
-if ("serviceWorker" in navigator) window.addEventListener("load", () => navigator.serviceWorker.register("sw.js", { scope: "/" }).catch(() => navigator.serviceWorker.register("sw.js").catch(() => {})));
+if ("serviceWorker" in navigator) window.addEventListener("load", () => navigator.serviceWorker.register("sw.js", { scope: "/" }).catch(() => navigator.serviceWorker.register("sw.js")).then(reg => { if (reg) document.addEventListener("visibilitychange", () => { if (!document.hidden) reg.update().catch(() => {}); }); }).catch(() => {}));
 document.addEventListener("visibilitychange", () => { if (!document.hidden && location.hash.startsWith("#/train")) { keepAwake(true); tick(); } });
 render();
 })();

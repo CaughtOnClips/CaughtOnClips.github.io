@@ -390,3 +390,27 @@ button.card{width:100%;text-align:left;cursor:pointer;font:inherit}
 .ptr.ready .ptr__label{color:var(--color-accent)}
 .ptr.busy .ptr__spin{animation:ptr-spin .7s linear infinite}
 @keyframes ptr-spin{to{transform:rotate(360deg)}}
+/* hg-v34: workout library browser, pause, page guides */
+.seg{display:flex;border:1px solid var(--border-color);border-radius:10px;overflow:hidden;margin:0 0 4px}
+.seg button{flex:1;min-height:44px;background:transparent;color:var(--color-text);border:0;font:700 14px var(--font-display,var(--font-display-fb));letter-spacing:.08em;text-transform:uppercase;cursor:pointer}
+.seg button.on{background:var(--color-primary);color:var(--color-on-primary)}
+.filterlbl{font:700 11px var(--font-mono,monospace);letter-spacing:.12em;text-transform:uppercase;color:var(--color-text-muted);margin:6px 0 6px}
+.chips .chip .cnt{opacity:.7;font-size:12px;margin-left:4px}
+.wkcount{margin:4px 0 10px;color:var(--color-text-muted)}.wkcount b{color:var(--color-text);font-size:18px}
+.wkcard .meta{margin:8px 0 6px}
+.pill.lvl-beginner{color:var(--color-success);border-color:var(--color-success);background:transparent}
+.pill.lvl-intermediate{color:var(--color-glow,#3ab8ff);border-color:var(--color-glow,#3ab8ff);background:transparent}
+.pill.lvl-advanced{color:var(--color-accent,#ffc94a);border-color:var(--color-accent,#ffc94a);background:transparent}
+.card.wu .label{font:700 11px var(--font-mono,monospace);letter-spacing:.12em;text-transform:uppercase;color:var(--color-text-muted)}
+.exlist .cue{color:var(--color-text-muted);margin-top:2px;font-style:italic}
+.pausebtn{font-size:15px;letter-spacing:-2px}
+.pausedov{position:fixed;inset:0;z-index:45;background:var(--color-overlay);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:calc(var(--sat) + 24px) calc(var(--sar) + 20px) calc(var(--sab) + 24px) calc(var(--sal) + 20px)}
+.pausedov .big{font-size:56px;margin:8px 0}
+.infobtn{flex:none;width:44px;height:44px;min-width:44px;border-radius:50%;border:1.5px solid var(--color-glow,#3ab8ff);background:transparent;color:var(--color-glow,#3ab8ff);font:700 italic 20px Georgia,serif;display:grid;place-items:center;cursor:pointer;padding:0}
+.infobtn:focus-visible{outline:2px solid var(--color-glow,#3ab8ff);outline-offset:2px}
+.infobar{display:flex;justify-content:flex-end;margin:0 0 6px}
+.cues.guide li{margin:6px 0}
+.btn.nowrap{white-space:nowrap;flex:none}
+.seg a{flex:1;min-height:44px;display:grid;place-items:center;color:var(--color-text);text-decoration:none;font:700 14px var(--font-display,var(--font-display-fb));letter-spacing:.08em;text-transform:uppercase;border-left:1px solid var(--border-color)}
+@media (max-width:380px){.seg button,.seg a{font-size:12px;letter-spacing:.04em}}
+.top .infobtn{margin-left:auto}
